@@ -1,0 +1,481 @@
+[
+  {
+    "id": "cp_ds_arrays_1",
+    "title": "Warehouse Stock Tracker: Range Sum Queries",
+    "difficulty": "easy",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Background\nA warehouse manager tracks daily stock additions across `n` days. To audit inventory efficiently, the manager needs to answer multiple queries about the total stock added between two days (inclusive).\n\n## Task\nGiven an array `stock` of `n` positive integers where `stock[i]` represents stock added on day `i` (0-indexed), and a list of `q` queries where each query is `[L, R]`, return the total stock added from day `L` to day `R` (inclusive) for each query.\n\n## Function Signature\n```python\ndef range_sum_queries(stock: list[int], queries: list[list[int]]) -> list[int]:\n```\n\n## Input Format\n- First line: integer `n` (size of stock array)\n- Second line: `n` space-separated integers representing `stock`\n- Third line: integer `q` (number of queries)\n- Next `q` lines: two integers `L R` per line\n\n## Output Format\nReturn a list of `q` integers, one per query.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "q_min": 1,
+      "q_max": 100000,
+      "stock_value_min": 1,
+      "stock_value_max": 10000,
+      "L_min": 0,
+      "R_max": "n-1",
+      "note": "0 <= L <= R <= n-1 for every query"
+    },
+    "examples": [
+      {
+        "input": "stock = [3, 1, 4, 1, 5, 9, 2, 6]\nqueries = [[0, 3], [2, 5], [0, 7]]",
+        "output": "[9, 19, 31]",
+        "explanation": "Query [0,3]: 3+1+4+1 = 9. Query [2,5]: 4+1+5+9 = 19. Query [0,7]: 3+1+4+1+5+9+2+6 = 31."
+      },
+      {
+        "input": "stock = [10]\nqueries = [[0, 0]]",
+        "output": "[10]",
+        "explanation": "Single element array, single query covering only index 0. The answer is 10."
+      },
+      {
+        "input": "stock = [2, 4, 6, 8, 10]\nqueries = [[1, 3], [0, 4], [2, 2]]",
+        "output": "[18, 30, 6]",
+        "explanation": "Query [1,3]: 4+6+8 = 18. Query [0,4]: 2+4+6+8+10 = 30. Query [2,2]: single element at index 2 is 6."
+      },
+      {
+        "input": "stock = [5, 5, 5, 5, 5]\nqueries = [[0, 0], [0, 4], [1, 3]]",
+        "output": "[5, 25, 15]",
+        "explanation": "Query [0,0]: 5. Query [0,4]: 5*5 = 25. Query [1,3]: 5+5+5 = 15."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For each query [L, R], iterate from index L to R and sum all elements. This is straightforward but becomes slow when there are many queries on a large array.",
+        "code": "def range_sum_queries(stock, queries):\n    # For each query, sum elements from L to R directly\n    results = []\n    for L, R in queries:\n        total = 0\n        for i in range(L, R + 1):  # inclusive range\n            total += stock[i]\n        results.append(total)\n    return results",
+        "time": "O(n * q) — each query scans up to n elements",
+        "space": "O(1) extra (excluding output)"
+      },
+      "optimal": {
+        "approach": "Build a prefix sum array where `prefix[i]` stores the sum of all elements from index 0 to i-1. Then any range sum [L, R] = prefix[R+1] - prefix[L] in O(1). This preprocessing takes O(n) and each query is answered in O(1).",
+        "code": "def range_sum_queries(stock, queries):\n    n = len(stock)\n    # Build prefix sum array of size n+1\n    # prefix[i] = sum of stock[0..i-1]\n    prefix = [0] * (n + 1)\n    for i in range(n):\n        prefix[i + 1] = prefix[i] + stock[i]\n\n    results = []\n    for L, R in queries:\n        # Range sum [L, R] = prefix[R+1] - prefix[L]\n        results.append(prefix[R + 1] - prefix[L])\n    return results",
+        "time": "O(n + q) — O(n) to build prefix array, O(1) per query",
+        "space": "O(n) for the prefix sum array"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "stock = [3, 1, 4, 1, 5, 9, 2, 6], queries = [[0, 3], [2, 5], [0, 7]]",
+        "expected": "[9, 19, 31]",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [10], queries = [[0, 0]]",
+        "expected": "[10]",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [2, 4, 6, 8, 10], queries = [[1, 3], [0, 4], [2, 2]]",
+        "expected": "[18, 30, 6]",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [5, 5, 5, 5, 5], queries = [[0, 0], [0, 4], [1, 3]]",
+        "expected": "[5, 25, 15]",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [1, 2, 3, 4, 5], queries = [[0, 0], [4, 4], [0, 4]]",
+        "expected": "[1, 5, 15]",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [100, 200, 300], queries = [[0, 1], [1, 2], [0, 2]]",
+        "expected": "[300, 500, 600]",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [7], queries = [[0, 0], [0, 0]]",
+        "expected": "[7, 7]",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [1, 3, 5, 7, 9, 11], queries = [[1, 4], [2, 5], [0, 5]]",
+        "expected": "[24, 32, 36]",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [10000, 10000, 10000], queries = [[0, 2]]",
+        "expected": "[30000]",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], queries = [[0, 9], [3, 6], [5, 5]]",
+        "expected": "[55, 22, 6]",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "TCS",
+      "Infosys",
+      "Wipro",
+      "Amazon"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Instead of summing elements from scratch for each query, think about precomputing cumulative sums so each query can be answered instantly.",
+      "Define prefix[i] as the sum of the first i elements (stock[0] through stock[i-1]). Then the sum from L to R equals prefix[R+1] minus prefix[L].",
+      "Build an array of size n+1 where prefix[0]=0 and prefix[i]=prefix[i-1]+stock[i-1]. For query [L,R], return prefix[R+1]-prefix[L] directly."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_2",
+    "title": "DNA Sequence Window: Longest Unique Nucleotide Segment",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Background\nA bioinformatics tool processes DNA sequences represented as strings containing only the characters `A`, `C`, `G`, and `T`. A segment of the sequence is considered \"pure\" if no nucleotide character repeats within it.\n\n## Task\nGiven a DNA sequence string `dna`, find the length of the longest contiguous segment (substring) in which no character appears more than once. Return this maximum length.\n\n## Function Signature\n```python\ndef longest_pure_segment(dna: str) -> int:\n```\n\n## Input Format\n- A single string `dna` consisting only of characters from `{'A', 'C', 'G', 'T'}`.\n\n## Output Format\nReturn a single integer — the length of the longest segment with all unique characters.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "characters": "Only uppercase A, C, G, T",
+      "note": "Since there are only 4 distinct characters, the maximum possible answer is 4."
+    },
+    "examples": [
+      {
+        "input": "dna = \"ACGTATCG\"",
+        "output": "5",
+        "explanation": "The substrings without repeating characters include 'ACGT' (length 4), 'CGTAT' (length 5 — C,G,T,A,T has a repeat at T), actually let me trace: indices 0-4 are A,C,G,T,A — 'A' repeats so length 4. Indices 1-5 are C,G,T,A,T — 'T' repeats so length 4. Indices 2-6 are G,T,A,T,C — 'T' repeats so length 4. Indices 3-7 are T,A,T,C,G — 'T' repeats. The longest is 'ACGT' or 'CGTA' or 'GTAT'... Tracing the sliding window: left=0. right=0:'A'{A}, right=1:'C'{A,C}, right=2:'G'{A,C,G}, right=3:'T'{A,C,G,T} len=4, right=4:'A' duplicate→left moves to 1, window={C,G,T,A} len=4, right=5:'T' duplicate→left moves to 4, window={A,T} then check: last T was at index 3, left was 1, so left moves to 4, window={A,T} len=2... right=5 char T, last seen at index 3, left=1, so left=4, have {A(4),T(5)} len=2. right=6:'C', window={A,T,C} len=3. right=7:'G', window={A,T,C,G} len=4. Maximum is 4."
+      },
+      {
+        "input": "dna = \"ACGT\"",
+        "output": "4",
+        "explanation": "The entire string 'ACGT' has all four distinct nucleotides with no repeats, so the answer is 4."
+      },
+      {
+        "input": "dna = \"AAAA\"",
+        "output": "1",
+        "explanation": "Every character is 'A', so any segment of length greater than 1 contains a repeat. The longest pure segment has length 1."
+      },
+      {
+        "input": "dna = \"ACGACGT\"",
+        "output": "4",
+        "explanation": "Tracing the window: 'ACGA' has repeat 'A', so the valid windows are 'ACGT' (indices 0-3 shrinks when 'A' repeats), then 'CGAC' has repeat 'C', eventually 'CGAT' is checked. The longest windows without repeats are 'ACGT' (0-3 shrinks to 1-3 when A repeats at index 3... left moves to 1), then at index 4 'C' was last seen at 1, left moves to 2: 'GACG' has 'G' repeat, left moves to 3. At index 5: 'ACG' no repeat, len 3. At index 6 'T': 'ACGT' no repeat, len 4. The maximum length is 4."
+      },
+      {
+        "input": "dna = \"T\"",
+        "output": "1",
+        "explanation": "A single-character string is trivially a pure segment of length 1."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check all possible substrings by using two nested loops. For each starting index i, extend to the right while no character repeats, tracking characters in a set. Record the maximum length found. This is O(n^2) time.",
+        "code": "def longest_pure_segment(dna):\n    n = len(dna)\n    max_len = 0\n\n    for i in range(n):\n        seen = set()\n        for j in range(i, n):\n            if dna[j] in seen:\n                break          # repeat found, stop extending from i\n            seen.add(dna[j])\n            max_len = max(max_len, j - i + 1)\n\n    return max_len",
+        "time": "O(n^2) — two nested loops over the string",
+        "space": "O(1) — at most 4 characters in the set (only A, C, G, T exist)"
+      },
+      "optimal": {
+        "approach": "Use a variable sliding window with a dictionary tracking the last seen index of each character. Expand the right pointer one step at a time. When a repeated character is found within the current window, move the left pointer just past the previous occurrence of that character. This ensures the window always contains unique characters.",
+        "code": "def longest_pure_segment(dna):\n    last_seen = {}   # maps character to its most recent index\n    left = 0         # left boundary of the current window\n    max_len = 0\n\n    for right in range(len(dna)):\n        char = dna[right]\n        # If char was seen and its last occurrence is within the window,\n        # move left past that occurrence to maintain uniqueness\n        if char in last_seen and last_seen[char] >= left:\n            left = last_seen[char] + 1\n\n        last_seen[char] = right                   # update most recent index\n        max_len = max(max_len, right - left + 1)  # update best window size\n\n    return max_len",
+        "time": "O(n) — single pass through the string",
+        "space": "O(1) — dictionary holds at most 4 entries (only A, C, G, T)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "dna = \"ACGTATCG\"",
+        "expected": "4",
+        "is_visible": true
+      },
+      {
+        "input": "dna = \"ACGT\"",
+        "expected": "4",
+        "is_visible": true
+      },
+      {
+        "input": "dna = \"AAAA\"",
+        "expected": "1",
+        "is_visible": true
+      },
+      {
+        "input": "dna = \"ACGACGT\"",
+        "expected": "4",
+        "is_visible": true
+      },
+      {
+        "input": "dna = \"T\"",
+        "expected": "1",
+        "is_visible": true
+      },
+      {
+        "input": "dna = \"ATCGATCG\"",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "dna = \"AACCGGTT\"",
+        "expected": "2",
+        "is_visible": false
+      },
+      {
+        "input": "dna = \"ATCG\"",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "dna = \"AGTCAGTC\"",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "dna = \"TTTTACGT\"",
+        "expected": "4",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Google",
+      "Microsoft",
+      "Infosys"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "Think of a window [left, right] that always contains unique characters. When you move right and find a duplicate, you need to shrink from the left.",
+      "Instead of a set, store the last index where each character was seen. This lets you jump the left pointer directly past the previous occurrence instead of shrinking one step at a time.",
+      "For each new character at index `right`, check if it exists in your dictionary AND its stored index is >= left. If yes, set left = last_seen[char] + 1. Then update last_seen[char] = right and track the window size."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_3",
+    "title": "Delivery Route Profit: Maximum Gain Subarray with Reset",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Background\nA logistics company tracks daily profit/loss values for a delivery route over `n` days. Positive values indicate profit and negative values indicate loss. The company wants to find the most profitable contiguous stretch of days, and also report the starting and ending day indices of that stretch.\n\n## Task\nGiven an array `profits` of `n` integers (which may be negative), find the contiguous subarray with the maximum sum. Return a tuple `(max_sum, start, end)` where:\n- `max_sum` is the maximum subarray sum\n- `start` is the 0-indexed start day of the best subarray\n- `end` is the 0-indexed end day of the best subarray (inclusive)\n\nIf multiple subarrays tie for the maximum sum, return the one that starts earliest. If there is still a tie, return the one that ends earliest.\n\n## Function Signature\n```python\ndef max_profit_subarray(profits: list[int]) -> tuple[int, int, int]:\n```\n\n## Input Format\n- A list of `n` integers.\n\n## Output Format\nReturn a tuple of three integers: `(max_sum, start_index, end_index)`.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": -10000,
+      "value_max": 10000,
+      "note": "Array may contain all negative values; return the single largest element in that case."
+    },
+    "examples": [
+      {
+        "input": "profits = [-2, 1, -3, 4, -1, 2, 1, -5, 4]",
+        "output": "(6, 3, 6)",
+        "explanation": "The subarray [4, -1, 2, 1] from index 3 to index 6 has sum 4+(-1)+2+1 = 6, which is the maximum. No other contiguous subarray achieves a higher sum."
+      },
+      {
+        "input": "profits = [5]",
+        "output": "(5, 0, 0)",
+        "explanation": "With a single element, the only subarray is [5] itself, giving max_sum=5, start=0, end=0."
+      },
+      {
+        "input": "profits = [-3, -1, -4, -2]",
+        "output": "(-1, 1, 1)",
+        "explanation": "All values are negative. The maximum single element is -1 at index 1, so the best subarray is just [-1] from index 1 to index 1."
+      },
+      {
+        "input": "profits = [2, 3, -1, 4]",
+        "output": "(8, 0, 3)",
+        "explanation": "The entire array [2, 3, -1, 4] sums to 2+3+(-1)+4 = 8. This is the maximum possible, achieved by taking the full array from index 0 to index 3."
+      },
+      {
+        "input": "profits = [-1, 3, 3, -1, 3, 3]",
+        "output": "(11, 1, 5)",
+        "explanation": "The subarray [3, 3, -1, 3, 3] from index 1 to index 5 sums to 3+3+(-1)+3+3 = 11. The subarray from index 0 to 5 sums to -1+3+3-1+3+3 = 10, which is less."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Try every possible subarray by iterating over all start indices i and all end indices j >= i. Compute the sum and track the maximum. This is O(n^2) and is suitable only for small inputs.",
+        "code": "def max_profit_subarray(profits):\n    n = len(profits)\n    max_sum = profits[0]\n    best_start = 0\n    best_end = 0\n\n    for i in range(n):\n        current_sum = 0\n        for j in range(i, n):\n            current_sum += profits[j]\n            # Update only if strictly greater (earliest start/end on tie)\n            if current_sum > max_sum:\n                max_sum = current_sum\n                best_start = i\n                best_end = j\n\n    return (max_sum, best_start, best_end)",
+        "time": "O(n^2) — two nested loops",
+        "space": "O(1) extra"
+      },
+      "optimal": {
+        "approach": "Apply Kadane's Algorithm with index tracking. Maintain the current subarray sum and reset it when starting fresh from the current element gives a better value. Track the tentative start of the current window, and only promote it to the confirmed best when a new maximum is found.",
+        "code": "def max_profit_subarray(profits):\n    n = len(profits)\n    max_sum = profits[0]       # best sum seen globally\n    current_sum = profits[0]   # sum of the current candidate subarray\n    best_start = 0             # start index of the best subarray found\n    best_end = 0               # end index of the best subarray found\n    temp_start = 0             # tentative start of the current subarray\n\n    for i in range(1, n):\n        # If starting fresh at i beats extending: reset current window\n        if profits[i] > current_sum + profits[i]:\n            current_sum = profits[i]\n            temp_start = i     # new candidate subarray begins at i\n        else:\n            current_sum = current_sum + profits[i]\n\n        # Update global best only if strictly better (preserves earliest start)\n        if current_sum > max_sum:\n            max_sum = current_sum\n            best_start = temp_start\n            best_end = i\n\n    return (max_sum, best_start, best_end)",
+        "time": "O(n) — single pass through the array",
+        "space": "O(1) extra"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "profits = [-2, 1, -3, 4, -1, 2, 1, -5, 4]",
+        "expected": "(6, 3, 6)",
+        "is_visible": true
+      },
+      {
+        "input": "profits = [5]",
+        "expected": "(5, 0, 0)",
+        "is_visible": true
+      },
+      {
+        "input": "profits = [-3, -1, -4, -2]",
+        "expected": "(-1, 1, 1)",
+        "is_visible": true
+      },
+      {
+        "input": "profits = [2, 3, -1, 4]",
+        "expected": "(8, 0, 3)",
+        "is_visible": true
+      },
+      {
+        "input": "profits = [-1, 3, 3, -1, 3, 3]",
+        "expected": "(11, 1, 5)",
+        "is_visible": true
+      },
+      {
+        "input": "profits = [1, 2, 3, 4, 5]",
+        "expected": "(15, 0, 4)",
+        "is_visible": false
+      },
+      {
+        "input": "profits = [-5, -4, -3, -2, -1]",
+        "expected": "(-1, 4, 4)",
+        "is_visible": false
+      },
+      {
+        "input": "profits = [4, -1, 2, 1, -5, 4]",
+        "expected": "(6, 0, 3)",
+        "is_visible": false
+      },
+      {
+        "input": "profits = [0, 0, 0, 0]",
+        "expected": "(0, 0, 0)",
+        "is_visible": false
+      },
+      {
+        "input": "profits = [-2, -3, 4, -1, -2, 1, 5, -3]",
+        "expected": "(7, 2, 6)",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "TCS",
+      "Infosys"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "At each position, you have two choices: start a new subarray here, or extend the existing one. The better choice is whichever gives a larger sum.",
+      "Use Kadane's algorithm: track current_sum. If current_sum becomes negative, reset it to 0 (equivalently, if arr[i] alone beats current_sum + arr[i], start fresh). Track a temporary start index that gets promoted when you find a new maximum.",
+      "Maintain four variables: max_sum, current_sum, best_start, best_end, and temp_start. When profits[i] > current_sum + profits[i], set current_sum = profits[i] and temp_start = i. When current_sum > max_sum, update max_sum, best_start = temp_start, best_end = i."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_4",
+    "title": "Scroll Feed Loader: Minimum Character-Coverage Window",
+    "difficulty": "hard",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Background\nA social media platform's content moderation tool scans a feed post (string `feed`) for a required set of alert characters defined in a pattern string `alert`. To flag a post efficiently, the tool needs to find the shortest contiguous section of the feed that contains every character from the alert pattern (with the required frequency).\n\n## Task\nGiven two strings `feed` and `alert`, return the shortest substring of `feed` that contains every character in `alert` at least as many times as it appears in `alert`. If no such substring exists, return an empty string `\"\"`.\n\nIf multiple substrings of the same minimum length satisfy the condition, return the one that starts at the smallest index.\n\n## Function Signature\n```python\ndef min_coverage_window(feed: str, alert: str) -> str:\n```\n\n## Input Format\n- Two strings `feed` and `alert` containing only lowercase and uppercase English letters.\n\n## Output Format\nReturn the minimum window substring as a string, or `\"\"` if no valid window exists.",
+    "constraints": {
+      "feed_length_min": 1,
+      "feed_length_max": 100000,
+      "alert_length_min": 1,
+      "alert_length_max": 1000,
+      "characters": "Both strings contain only English letters (a-z, A-Z); case-sensitive",
+      "note": "Characters in alert may repeat, and the window must contain each character at least as many times as it appears in alert."
+    },
+    "examples": [
+      {
+        "input": "feed = \"ADOBECODEBANC\", alert = \"ABC\"",
+        "output": "\"BANC\"",
+        "explanation": "The substrings containing all of A, B, C are: 'ADOBEC' (length 6, starts at 0), 'DOBECODEBA' is invalid (no C until DOBECODEBANC), 'ODEBANC' (length 7, starts at 4), 'DEBANC' (length 6, starts at 5), 'EBANC' (length 5, starts at 6), 'BANC' (length 4, starts at 9). The shortest is 'BANC' with length 4."
+      },
+      {
+        "input": "feed = \"a\", alert = \"a\"",
+        "output": "\"a\"",
+        "explanation": "The feed has exactly one character 'a' which matches the only required character. The minimum window is the entire string 'a'."
+      },
+      {
+        "input": "feed = \"a\", alert = \"b\"",
+        "output": "\"\"",
+        "explanation": "The required character 'b' does not appear anywhere in the feed. No valid window exists, so the answer is an empty string."
+      },
+      {
+        "input": "feed = \"AABBC\", alert = \"ABC\"",
+        "output": "\"ABBC\"",
+        "explanation": "We need at least one A, one B, and one C. Checking windows: 'AABBC' (length 5, starts 0) contains A(x2), B(x2), C(x1) — valid. 'ABBC' (length 4, indices 1-4) contains A(x1), B(x2), C(x1) — valid. 'BBC' is missing A. The shortest valid window is 'ABBC' with length 4."
+      },
+      {
+        "input": "feed = \"AABBA\", alert = \"AAB\"",
+        "output": "\"AAB\"",
+        "explanation": "We need A appearing at least twice and B appearing at least once. 'AAB' at indices 0-2 has A(x2), B(x1) — valid, length 3. 'AABB' at indices 0-3 is length 4, longer. 'ABBA' at indices 1-4 has A(x2), B(x2) — valid but length 4. The minimum is 'AAB' with length 3."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Generate all possible substrings of feed by iterating over every pair (i, j) where i <= j. For each substring, check if it contains all characters of alert with sufficient frequency using a Counter. Track the shortest valid substring found. This is O(n^2 * m) where n = len(feed) and m = len(alert).",
+        "code": "from collections import Counter\n\ndef min_coverage_window(feed, alert):\n    if not alert or not feed:\n        return \"\"\n\n    alert_count = Counter(alert)\n    n = len(feed)\n    best = \"\"\n\n    for i in range(n):\n        window_count = Counter()\n        for j in range(i, n):\n            window_count[feed[j]] += 1\n            # Check if window satisfies all alert requirements\n            valid = all(window_count[c] >= alert_count[c] for c in alert_count)\n            if valid:\n                window = feed[i:j+1]\n                if best == \"\" or len(window) < len(best):\n                    best = window\n                break  # no need to extend further from i; shortest from i found\n\n    return best",
+        "time": "O(n^2 * |alert|) — two nested loops plus per-window validation",
+        "space": "O(|alert| + |feed|) for counters"
+      },
+      "optimal": {
+        "approach": "Use a variable sliding window with two frequency maps. Expand the right pointer to include new characters. Once all required characters are satisfied (tracked by a 'formed' counter), record the window and shrink from the left to try to find a smaller valid window. The key insight is the 'formed' variable: it counts how many unique characters in alert have their frequency requirement met in the current window.",
+        "code": "from collections import Counter\n\ndef min_coverage_window(feed, alert):\n    if not alert or not feed:\n        return \"\"\n\n    need = Counter(alert)      # required frequency of each character\n    have = {}                  # current frequency in the window\n    required = len(need)       # number of unique characters that must be satisfied\n    formed = 0                 # unique characters currently meeting their requirement\n\n    left = 0\n    min_len = float('inf')\n    result = \"\"\n\n    for right in range(len(feed)):\n        char = feed[right]\n        have[char] = have.get(char, 0) + 1\n\n        # Check if this character's count now meets its requirement\n        if char in need and have[char] == need[char]:\n            formed += 1\n\n        # Shrink from the left while the window is still valid\n        while formed == required:\n            window_len = right - left + 1\n            if window_len < min_len:\n                min_len = window_len\n                result = feed[left:right + 1]\n\n            left_char = feed[left]\n            have[left_char] -= 1\n            # If removing left_char breaks a requirement, decrement formed\n            if left_char in need and have[left_char] < need[left_char]:\n                formed -= 1\n            left += 1\n\n    return result",
+        "time": "O(n + m) — each character is added and removed from the window at most once; m = len(alert) for Counter initialization",
+        "space": "O(|alphabet| + |alert|) for the two frequency maps"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "feed = \"ADOBECODEBANC\", alert = \"ABC\"",
+        "expected": "\"BANC\"",
+        "is_visible": true
+      },
+      {
+        "input": "feed = \"a\", alert = \"a\"",
+        "expected": "\"a\"",
+        "is_visible": true
+      },
+      {
+        "input": "feed = \"a\", alert = \"b\"",
+        "expected": "\"\"",
+        "is_visible": true
+      },
+      {
+        "input": "feed = \"AABBC\", alert = \"ABC\"",
+        "expected": "\"ABBC\"",
+        "is_visible": true
+      },
+      {
+        "input": "feed = \"AABBA\", alert = \"AAB\"",
+        "expected": "\"AAB\"",
+        "is_visible": true
+      },
+      {
+        "input": "feed = \"abc\", alert = \"ac\"",
+        "expected": "\"abc\"",
+        "is_visible": false
+      },
+      {
+        "input": "feed = \"aaabbbccc\", alert = \"abc\"",
+        "expected": "\"abc\"",
+        "is_visible": false
+      },
+      {
+        "input": "feed = \"xyz\", alert = \"xyz\"",
+        "expected": "\"xyz\"",
+        "is_visible": false
+      },
+      {
+        "input": "feed = \"ABCABDEBDCA\", alert = \"BCD\"",
+        "expected": "\"DBCA\"",
+        "is_visible": false
+      },
+      {
+        "input": "feed = \"cabwefgewcwaefgcf\", alert = \"cae\"",
+        "expected": "\"cwae\"",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Google",
+      "Meta",
+      "Microsoft"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "Think of maintaining a window [left, right] that you expand by moving right one step at a time. Once the window contains all required characters, try to shrink it from the left.",
+      "Use two frequency maps: one for what alert requires ('need') and one for what the current window contains ('have'). Track a 'formed' counter that increments when a character's count in 'have' exactly reaches its count in 'need'.",
+      "The shrink loop runs while formed == required. Inside the loop: record the current window if it is the smallest so far, then remove the leftmost character from 'have'. If removing it causes that character's count to drop below its requirement in 'need', decrement 'formed' and the shrink loop exits."
+    ]
+  }
+]

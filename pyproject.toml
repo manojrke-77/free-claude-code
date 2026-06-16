@@ -77,6 +77,10 @@ dev = [
     "ruff>=0.15.22",
     "pytest-xdist>=3.8.0",
 ]
+content = [
+    "crewai>=1.0.0",
+    "crewai-tools>=0.40.0",
+]
 
 [tool.ruff]
 target-version = "py314"

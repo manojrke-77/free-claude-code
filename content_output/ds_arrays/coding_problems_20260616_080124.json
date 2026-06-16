@@ -1,0 +1,277 @@
+[
+  {
+    "id": "cp_ds_arrays_1",
+    "title": "Warehouse Inventory Balance",
+    "difficulty": "easy",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA warehouse manager stores daily stock counts in an array. She wants to find the **equilibrium index** — a position where the sum of all elements to its left equals the sum of all elements to its right.\n\n**Task:** Given an integer array `stock`, return the **first** index `i` (0-indexed) such that the sum of `stock[0..i-1]` equals the sum of `stock[i+1..n-1]`. If no such index exists, return `-1`.\n\nElements outside the array boundaries (i.e., nothing to the left of index 0, nothing to the right of index n-1) are treated as having sum 0.\n\n**Function signature:**\n```python\ndef find_equilibrium(stock: list[int]) -> int:\n```",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": -10000,
+      "value_max": 10000,
+      "time_limit": "O(n)",
+      "space_limit": "O(1) extra space preferred"
+    },
+    "examples": [
+      {
+        "input": "stock = [2, 4, 6, 8, 6, 4, 2]",
+        "output": "3",
+        "explanation": "At index 3 (value 8): left sum = 2+4+6 = 12, right sum = 6+4+2 = 12. Both are equal, so index 3 is the equilibrium."
+      },
+      {
+        "input": "stock = [1, 2, 3]",
+        "output": "-1",
+        "explanation": "No index satisfies the condition: left/right sums never balance, so return -1."
+      },
+      {
+        "input": "stock = [5]",
+        "output": "0",
+        "explanation": "With only one element, left sum = 0 and right sum = 0, so index 0 is the equilibrium."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For each index i, compute the sum of all elements to its left and all elements to its right using two separate loops. If they match, return i. This is straightforward but redundant — it recomputes overlapping sums repeatedly.",
+        "code": "def find_equilibrium(stock):\n    n = len(stock)\n    for i in range(n):\n        left_sum = sum(stock[:i])      # Sum of elements before i\n        right_sum = sum(stock[i+1:])   # Sum of elements after i\n        if left_sum == right_sum:\n            return i\n    return -1",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Compute total_sum once. Traverse left to right, maintaining a running left_sum. At each index i, right_sum = total_sum - left_sum - stock[i]. If left_sum == right_sum, return i. Increment left_sum by stock[i] and continue. This avoids recomputing sums from scratch.",
+        "code": "def find_equilibrium(stock):\n    total_sum = sum(stock)  # Compute total sum once\n    left_sum = 0\n    for i in range(len(stock)):\n        # right_sum = total - left_sum - current element\n        right_sum = total_sum - left_sum - stock[i]\n        if left_sum == right_sum:\n            return i\n        left_sum += stock[i]  # Expand left sum to include current element\n    return -1",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "stock = [2, 4, 6, 8, 6, 4, 2]",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [1, 2, 3]",
+        "expected": "-1",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [5]",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [0, 0, 0, 0]",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [-7, 1, 5, 2, -4, 3, 0]",
+        "expected": "3",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [1]",
+        "expected": "0",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "TCS",
+      "Infosys",
+      "Microsoft"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Hint 1: Think about what information you need at each index i to check the equilibrium condition — can you avoid recomputing sums from scratch each time?",
+      "Hint 2: Compute the total sum of the array once. Then, as you move left to right, maintain a running left_sum. The right sum at index i can be derived from total_sum, left_sum, and stock[i].",
+      "Hint 3: At index i, right_sum = total_sum - left_sum - stock[i]. Check if left_sum == right_sum, then update left_sum += stock[i] before moving to index i+1."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_2",
+    "title": "Temperature Spike Window",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA meteorologist records hourly temperature readings as an integer array `temps`. She wants to find the **minimum length contiguous subarray** whose sum is **greater than or equal to** a given target `T`.\n\n**Task:** Given an array `temps` of positive integers and an integer `T`, return the length of the **shortest contiguous subarray** with sum ≥ T. If no such subarray exists, return `0`.\n\n**Function signature:**\n```python\ndef min_subarray_len(temps: list[int], T: int) -> int:\n```\n\n**Note:** All elements in `temps` are positive integers (≥ 1).",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": 1,
+      "value_max": 10000,
+      "T_min": 1,
+      "T_max": 1000000000,
+      "time_limit": "O(n)",
+      "space_limit": "O(1)"
+    },
+    "examples": [
+      {
+        "input": "temps = [2, 3, 1, 2, 4, 3], T = 7",
+        "output": "2",
+        "explanation": "The subarray [4, 3] has sum 7 ≥ 7 and length 2, which is the shortest such subarray."
+      },
+      {
+        "input": "temps = [1, 1, 1, 1, 1], T = 11",
+        "output": "0",
+        "explanation": "The total sum of the array is 5, which is less than 11, so no valid subarray exists."
+      },
+      {
+        "input": "temps = [10], T = 7",
+        "output": "1",
+        "explanation": "The single element 10 ≥ 7, so the minimum length subarray has length 1."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check every possible subarray using two nested loops. For each starting index i, expand to the right accumulating the sum. As soon as the sum reaches T, record the length and break to try the next starting index. Track the global minimum length found.",
+        "code": "def min_subarray_len(temps, T):\n    n = len(temps)\n    min_len = float('inf')\n    for i in range(n):\n        curr_sum = 0\n        for j in range(i, n):\n            curr_sum += temps[j]\n            if curr_sum >= T:\n                min_len = min(min_len, j - i + 1)\n                break  # Can't do better starting from i\n    return 0 if min_len == float('inf') else min_len",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Use a variable-size sliding window. Since all elements are positive, increasing the window size always increases the sum. Expand right to grow the window sum. When the sum reaches T, try to shrink from the left to find the minimum length, updating the answer each time the condition holds. Because elements are positive, shrinking can only decrease the sum, so we stop shrinking when sum < T and expand again.",
+        "code": "def min_subarray_len(temps, T):\n    n = len(temps)\n    min_len = float('inf')\n    left = 0\n    curr_sum = 0\n\n    for right in range(n):\n        curr_sum += temps[right]  # Expand window to the right\n\n        # Shrink window from the left while condition is met\n        while curr_sum >= T:\n            min_len = min(min_len, right - left + 1)\n            curr_sum -= temps[left]  # Remove leftmost element\n            left += 1                 # Shrink window\n\n    return 0 if min_len == float('inf') else min_len",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "temps = [2, 3, 1, 2, 4, 3], T = 7",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "temps = [1, 1, 1, 1, 1], T = 11",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "temps = [10], T = 7",
+        "expected": "1",
+        "is_visible": true
+      },
+      {
+        "input": "temps = [1, 2, 3, 4, 5], T = 15",
+        "expected": "5",
+        "is_visible": false
+      },
+      {
+        "input": "temps = [5, 1, 3, 5, 10, 7, 4, 9, 2, 8], T = 15",
+        "expected": "2",
+        "is_visible": false
+      },
+      {
+        "input": "temps = [1, 4, 4], T = 4",
+        "expected": "1",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "Google",
+      "Infosys"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "Hint 1: Since all values are positive, adding more elements always increases the window sum — this property makes a two-pointer sliding window valid here.",
+      "Hint 2: Use two pointers (left, right). Expand right to grow the sum. Once the sum is ≥ T, record the window length and try shrinking from the left to see if a shorter valid window exists.",
+      "Hint 3: Inside a while loop, as long as curr_sum >= T, update min_len with (right - left + 1), subtract temps[left] from curr_sum, and increment left. The answer is 0 if min_len was never updated."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_3",
+    "title": "Signal Frequency Decoder",
+    "difficulty": "hard",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA signal processor receives a string `signal` of lowercase letters representing encoded frequency bursts. An analyst needs to find all **starting indices** in `signal` where a **permutation** (anagram) of a given pattern string `code` begins.\n\n**Task:** Given strings `signal` and `code`, return a sorted list of all starting indices in `signal` where a substring of length `len(code)` is an anagram of `code`.\n\n**Function signature:**\n```python\ndef find_anagram_positions(signal: str, code: str) -> list[int]:\n```\n\n**Example:** If `signal = \"cbaebabacd\"` and `code = \"abc\"`, then the anagrams of `\"abc\"` in `signal` are `\"cba\"` at index 0 and `\"bac\"` at index 6, so the answer is `[0, 6]`.",
+    "constraints": {
+      "signal_len_min": 1,
+      "signal_len_max": 100000,
+      "code_len_min": 1,
+      "code_len_max": 100000,
+      "characters": "lowercase English letters only (a-z)",
+      "note": "If len(code) > len(signal), return []"
+    },
+    "examples": [
+      {
+        "input": "signal = \"cbaebabacd\", code = \"abc\"",
+        "output": "[0, 6]",
+        "explanation": "signal[0:3] = 'cba' is an anagram of 'abc', and signal[6:9] = 'bac' is also an anagram of 'abc'."
+      },
+      {
+        "input": "signal = \"aaaaaa\", code = \"aa\"",
+        "output": "[0, 1, 2, 3, 4]",
+        "explanation": "Every window of length 2 is 'aa', which is an anagram of 'aa', giving 5 starting positions."
+      },
+      {
+        "input": "signal = \"ab\", code = \"xyz\"",
+        "output": "[]",
+        "explanation": "The code length exceeds signal length, so no valid window exists."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Slide a window of length len(code) across signal. At each position, sort the window substring and the code and compare. If they match, record the index. Sorting each window takes O(k log k) where k = len(code), giving O(n * k log k) overall.",
+        "code": "def find_anagram_positions(signal, code):\n    result = []\n    k = len(code)\n    sorted_code = sorted(code)  # Sort code once\n    for i in range(len(signal) - k + 1):\n        if sorted(signal[i:i+k]) == sorted_code:\n            result.append(i)\n    return result",
+        "time": "O(n * k * log k)",
+        "space": "O(k)"
+      },
+      "optimal": {
+        "approach": "Use a fixed-size sliding window with two frequency arrays of size 26 (one for code, one for the current window). Initialize both arrays for the first window. As the window slides right by one, increment the count for the incoming character and decrement for the outgoing character. Compare the two frequency arrays in O(26) = O(1) at each step, giving O(n) overall.",
+        "code": "def find_anagram_positions(signal, code):\n    result = []\n    k = len(code)\n    n = len(signal)\n    if k > n:\n        return result\n\n    code_freq = [0] * 26\n    window_freq = [0] * 26\n\n    # Build frequency arrays for code and first window\n    for i in range(k):\n        code_freq[ord(code[i]) - ord('a')] += 1\n        window_freq[ord(signal[i]) - ord('a')] += 1\n\n    if window_freq == code_freq:\n        result.append(0)\n\n    # Slide the window one step at a time\n    for i in range(k, n):\n        window_freq[ord(signal[i]) - ord('a')] += 1       # Add incoming char\n        window_freq[ord(signal[i - k]) - ord('a')] -= 1  # Remove outgoing char\n        if window_freq == code_freq:\n            result.append(i - k + 1)\n\n    return result",
+        "time": "O(n)",
+        "space": "O(1) — frequency arrays are fixed size 26"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "signal = \"cbaebabacd\", code = \"abc\"",
+        "expected": "[0, 6]",
+        "is_visible": true
+      },
+      {
+        "input": "signal = \"aaaaaa\", code = \"aa\"",
+        "expected": "[0, 1, 2, 3, 4]",
+        "is_visible": true
+      },
+      {
+        "input": "signal = \"ab\", code = \"xyz\"",
+        "expected": "[]",
+        "is_visible": true
+      },
+      {
+        "input": "signal = \"abab\", code = \"ab\"",
+        "expected": "[0, 1, 2]",
+        "is_visible": false
+      },
+      {
+        "input": "signal = \"aaabbb\", code = \"aab\"",
+        "expected": "[0, 1]",
+        "is_visible": false
+      },
+      {
+        "input": "signal = \"z\", code = \"z\"",
+        "expected": "[0]",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Google",
+      "Microsoft",
+      "Wipro"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "Hint 1: Sorting a new window substring at every step is expensive. Think about what changes between two consecutive windows — only one character enters and one character leaves.",
+      "Hint 2: Maintain a frequency count array of size 26 for both the code and the current window. Sliding the window means one increment and one decrement per step.",
+      "Hint 3: Compare the two frequency arrays after each slide. In Python, two lists of size 26 can be compared with == in O(26) = O(1). Initialize both arrays using the first window, then update incrementally for each subsequent position."
+    ]
+  }
+]

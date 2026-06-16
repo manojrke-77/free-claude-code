@@ -1,0 +1,491 @@
+[
+  {
+    "id": "cp_ds_arrays_1",
+    "title": "Warehouse Inventory Peak Finder",
+    "difficulty": "easy",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Background\nA logistics company maintains a daily inventory count for a warehouse. Given the daily inventory levels recorded over several days, your task is to find the **peak inventory day** — the day when the inventory was highest.\n\n## Task\nGiven a list of integers representing daily inventory counts, return the **index (0-based)** of the day with the maximum inventory. If multiple days share the same maximum inventory, return the **earliest** such index.\n\n## Function Signature\n```python\ndef peak_inventory_day(inventory: list[int]) -> int:\n```\n\n## Input\n- A single line containing space-separated integers representing daily inventory counts.\n\n## Output\n- A single integer: the 0-based index of the day with maximum inventory.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": 0,
+      "value_max": 1000000000,
+      "time_limit": "1 second",
+      "memory_limit": "256 MB"
+    },
+    "examples": [
+      {
+        "input": "[3, 7, 1, 9, 4]",
+        "output": "3",
+        "explanation": "The inventory counts are [3, 7, 1, 9, 4]. The maximum value is 9, which occurs at index 3. So the answer is 3."
+      },
+      {
+        "input": "[5, 5, 5, 5]",
+        "output": "0",
+        "explanation": "All four days have the same inventory count of 5. Since we return the earliest index, the answer is 0."
+      },
+      {
+        "input": "[42]",
+        "output": "0",
+        "explanation": "There is only one day with inventory 42. The only valid index is 0."
+      },
+      {
+        "input": "[1, 2, 3, 4, 5]",
+        "output": "4",
+        "explanation": "The inventory is strictly increasing. The maximum value is 5 at index 4."
+      },
+      {
+        "input": "[10, 3, 10, 2]",
+        "output": "0",
+        "explanation": "The maximum inventory is 10, which appears at both index 0 and index 2. We return the earliest index, which is 0."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Scan the entire array to find the maximum value, then do a second scan to find the first occurrence of that maximum. This is straightforward but uses two passes.",
+        "code": "def peak_inventory_day(inventory: list[int]) -> int:\n    # Pass 1: find the maximum value\n    max_val = inventory[0]\n    for val in inventory:\n        if val > max_val:\n            max_val = val\n\n    # Pass 2: find the first index where this maximum occurs\n    for i, val in enumerate(inventory):\n        if val == max_val:\n            return i\n\n    return 0  # Should never reach here given n_min=1",
+        "time": "O(n)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Single pass: track the maximum value and its index simultaneously. Whenever a strictly greater value is found, update both the max and its index. This avoids a second scan entirely.",
+        "code": "def peak_inventory_day(inventory: list[int]) -> int:\n    max_val = inventory[0]\n    max_idx = 0\n\n    for i in range(1, len(inventory)):\n        # Only update on strictly greater to preserve earliest index\n        if inventory[i] > max_val:\n            max_val = inventory[i]\n            max_idx = i\n\n    return max_idx",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "[3, 7, 1, 9, 4]",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "[5, 5, 5, 5]",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "[42]",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "[1, 2, 3, 4, 5]",
+        "expected": "4",
+        "is_visible": true
+      },
+      {
+        "input": "[10, 3, 10, 2]",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "[0, 0, 0, 1, 0]",
+        "expected": "3",
+        "is_visible": false
+      },
+      {
+        "input": "[1000000000, 999999999]",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "[5, 1, 5, 1, 5]",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "[0]",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "[2, 4, 6, 8, 10, 9, 7, 5, 3, 1]",
+        "expected": "4",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "TCS",
+      "Infosys",
+      "Wipro",
+      "Cognizant"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Think about what information you need to track as you walk through the list once from left to right.",
+      "Maintain two variables simultaneously: the current maximum value seen so far, and the index at which it first occurred.",
+      "When you encounter a new element, only update your maximum and its index if the new element is strictly greater than the current maximum. Using >= instead of > would overwrite the earliest occurrence."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_2",
+    "title": "Fruit Basket Window",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Background\nA fruit vendor has a row of stalls, each selling one type of fruit identified by a positive integer code. You have a basket that can hold **at most K distinct types** of fruit. You want to pick from a contiguous segment of stalls.\n\n## Task\nGiven a list of integers `stalls` where `stalls[i]` is the fruit type at stall `i`, and an integer `K`, return the **length of the longest contiguous subarray** that contains **at most K distinct fruit types**.\n\n## Function Signature\n```python\ndef longest_basket_window(stalls: list[int], k: int) -> int:\n```\n\n## Input Format\n- Line 1: Space-separated integers representing `stalls`.\n- Line 2: A single integer `k`.\n\n## Output Format\n- A single integer: the length of the longest valid contiguous subarray.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "k_min": 1,
+      "k_max": 100000,
+      "value_min": 1,
+      "value_max": 100000,
+      "time_limit": "1 second",
+      "memory_limit": "256 MB"
+    },
+    "examples": [
+      {
+        "input": "stalls = [1, 2, 1, 2, 3], k = 2",
+        "output": "4",
+        "explanation": "The subarray [1, 2, 1, 2] (indices 0 to 3) has exactly 2 distinct types and length 4. Adding index 4 (type 3) would introduce a third distinct type, violating the constraint. No longer valid subarray with at most 2 distinct types exists."
+      },
+      {
+        "input": "stalls = [1, 2, 3, 4, 5], k = 1",
+        "output": "1",
+        "explanation": "With K=1, we can only pick one type of fruit at a time. Each stall has a unique type, so the longest window is any single stall, giving length 1."
+      },
+      {
+        "input": "stalls = [3, 3, 3], k = 2",
+        "output": "3",
+        "explanation": "The entire array has only 1 distinct type (3), which is within the limit of K=2. So the answer is the full length, 3."
+      },
+      {
+        "input": "stalls = [1, 2, 1, 3, 4], k = 3",
+        "output": "4",
+        "explanation": "The subarrays with at most 3 distinct types: [1,2,1,3] has 3 distinct types and length 4; [2,1,3,4] has 4 distinct types (invalid); [1,3,4] has length 3. The maximum is 4."
+      },
+      {
+        "input": "stalls = [7], k = 1",
+        "output": "1",
+        "explanation": "A single-element array always has 1 distinct type, which satisfies K>=1. The answer is 1."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check every possible subarray. For each starting index i, extend to the right while the number of distinct elements stays within K. Track the maximum length found. This is O(n^2) in the worst case.",
+        "code": "def longest_basket_window(stalls: list[int], k: int) -> int:\n    n = len(stalls)\n    max_len = 0\n\n    for i in range(n):\n        freq = {}\n        for j in range(i, n):\n            # Add stalls[j] to the current window\n            freq[stalls[j]] = freq.get(stalls[j], 0) + 1\n            # If distinct count exceeds k, stop extending\n            if len(freq) > k:\n                break\n            max_len = max(max_len, j - i + 1)\n\n    return max_len",
+        "time": "O(n^2)",
+        "space": "O(k)"
+      },
+      "optimal": {
+        "approach": "Use a variable-size sliding window with a frequency map. Expand the right pointer freely. When the number of distinct types exceeds K, shrink from the left by decrementing the frequency of the leftmost element and removing it from the map if its count drops to zero. After each step, update the maximum window length.",
+        "code": "def longest_basket_window(stalls: list[int], k: int) -> int:\n    freq = {}   # fruit_type -> count in current window\n    left = 0\n    max_len = 0\n\n    for right in range(len(stalls)):\n        # Expand window: include stalls[right]\n        fruit = stalls[right]\n        freq[fruit] = freq.get(fruit, 0) + 1\n\n        # Shrink window from left until distinct types <= k\n        while len(freq) > k:\n            left_fruit = stalls[left]\n            freq[left_fruit] -= 1\n            if freq[left_fruit] == 0:\n                del freq[left_fruit]\n            left += 1\n\n        # Window [left, right] is now valid\n        max_len = max(max_len, right - left + 1)\n\n    return max_len",
+        "time": "O(n)",
+        "space": "O(k)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "stalls = [1, 2, 1, 2, 3], k = 2",
+        "expected": "4",
+        "is_visible": true
+      },
+      {
+        "input": "stalls = [1, 2, 3, 4, 5], k = 1",
+        "expected": "1",
+        "is_visible": true
+      },
+      {
+        "input": "stalls = [3, 3, 3], k = 2",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "stalls = [1, 2, 1, 3, 4], k = 3",
+        "expected": "4",
+        "is_visible": true
+      },
+      {
+        "input": "stalls = [7], k = 1",
+        "expected": "1",
+        "is_visible": true
+      },
+      {
+        "input": "stalls = [1, 1, 1, 1, 2, 2, 3, 3], k = 2",
+        "expected": "6",
+        "is_visible": false
+      },
+      {
+        "input": "stalls = [1, 2, 3, 1, 2, 3], k = 3",
+        "expected": "6",
+        "is_visible": false
+      },
+      {
+        "input": "stalls = [1, 2, 3, 4, 5], k = 5",
+        "expected": "5",
+        "is_visible": false
+      },
+      {
+        "input": "stalls = [2, 2, 2, 2], k = 1",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "stalls = [1, 3, 2, 3, 1, 2, 4, 1], k = 3",
+        "expected": "6",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "Flipkart",
+      "Adobe"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "Think about maintaining a window over the array where the constraint (at most K distinct types) is satisfied. How do you efficiently track whether the window is valid?",
+      "Use a dictionary to store the frequency of each fruit type in your current window. When the number of keys in the dictionary exceeds K, the window is invalid.",
+      "Use two pointers (left and right). Advance the right pointer to expand the window. When distinct types exceed K, advance the left pointer and reduce frequencies until the window is valid again. The answer is the maximum (right - left + 1) seen."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_3",
+    "title": "Cipher Shift Anagram Locator",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Background\nA security analyst is searching for disguised keywords within a long transmission log. The keywords may appear as anagrams (rearrangements) of a known cipher pattern. Your task is to locate all starting positions where an anagram of the pattern appears in the transmission.\n\n## Task\nGiven a transmission string `text` and a pattern string `pattern`, return a **sorted list of all starting indices** (0-based) in `text` where an anagram of `pattern` begins. An anagram is a rearrangement using all characters of `pattern` exactly once.\n\n## Function Signature\n```python\ndef find_anagram_positions(text: str, pattern: str) -> list[int]:\n```\n\n## Input Format\n- Line 1: The string `text` (lowercase English letters only).\n- Line 2: The string `pattern` (lowercase English letters only).\n\n## Output Format\n- A sorted list of integers representing starting indices.",
+    "constraints": {
+      "text_len_min": 1,
+      "text_len_max": 100000,
+      "pattern_len_min": 1,
+      "pattern_len_max": 100000,
+      "characters": "lowercase English letters a-z only",
+      "note": "If pattern length exceeds text length, return an empty list.",
+      "time_limit": "1 second",
+      "memory_limit": "256 MB"
+    },
+    "examples": [
+      {
+        "input": "text = \"cbaebabacd\", pattern = \"abc\"",
+        "output": "[0, 6]",
+        "explanation": "At index 0: substring 'cba' is an anagram of 'abc'. At index 6: substring 'bac' is an anagram of 'abc'. No other window of length 3 in the text is an anagram of 'abc'."
+      },
+      {
+        "input": "text = \"abab\", pattern = \"ab\"",
+        "output": "[0, 1, 2]",
+        "explanation": "Window at index 0: 'ab' — anagram of 'ab'. Window at index 1: 'ba' — anagram of 'ab'. Window at index 2: 'ab' — anagram of 'ab'. All three are valid."
+      },
+      {
+        "input": "text = \"aaaa\", pattern = \"aa\"",
+        "output": "[0, 1, 2]",
+        "explanation": "Every window of length 2 in 'aaaa' is 'aa', which is an anagram of 'aa'. There are 3 such windows starting at indices 0, 1, and 2."
+      },
+      {
+        "input": "text = \"abc\", pattern = \"abcd\"",
+        "output": "[]",
+        "explanation": "The pattern length (4) exceeds the text length (3), so no valid window can exist. The result is an empty list."
+      },
+      {
+        "input": "text = \"xyz\", pattern = \"abc\"",
+        "output": "[]",
+        "explanation": "The only window of length 3 is 'xyz', which shares no characters with 'abc'. No anagram of 'abc' exists in 'xyz'."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For each possible starting position in text (there are n - m + 1 positions where m is the pattern length), extract the substring of length m and check if it is an anagram of pattern by comparing sorted versions. This is O(n * m log m) overall.",
+        "code": "def find_anagram_positions(text: str, pattern: str) -> list[int]:\n    n, m = len(text), len(pattern)\n    if m > n:\n        return []\n\n    sorted_pattern = sorted(pattern)\n    result = []\n\n    for i in range(n - m + 1):\n        # Extract window and sort it\n        if sorted(text[i:i + m]) == sorted_pattern:\n            result.append(i)\n\n    return result",
+        "time": "O(n * m * log(m))",
+        "space": "O(m)"
+      },
+      "optimal": {
+        "approach": "Use a fixed-size sliding window of length m with two frequency arrays (or dictionaries) of size 26 — one for the pattern and one for the current window. Slide the window across text: add the incoming character and remove the outgoing character. If the two frequency arrays match, the current window is an anagram. Comparing two fixed-size-26 arrays is O(1), so the total time is O(n).",
+        "code": "def find_anagram_positions(text: str, pattern: str) -> list[int]:\n    n, m = len(text), len(pattern)\n    if m > n:\n        return []\n\n    # Build frequency arrays for pattern and first window\n    pat_freq = [0] * 26\n    win_freq = [0] * 26\n\n    for ch in pattern:\n        pat_freq[ord(ch) - ord('a')] += 1\n    for ch in text[:m]:\n        win_freq[ord(ch) - ord('a')] += 1\n\n    result = []\n    if win_freq == pat_freq:\n        result.append(0)\n\n    # Slide window from index 1 to n-m\n    for i in range(1, n - m + 1):\n        # Add incoming character (right end of new window)\n        win_freq[ord(text[i + m - 1]) - ord('a')] += 1\n        # Remove outgoing character (left end of old window)\n        win_freq[ord(text[i - 1]) - ord('a')] -= 1\n\n        if win_freq == pat_freq:\n            result.append(i)\n\n    return result",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "text = \"cbaebabacd\", pattern = \"abc\"",
+        "expected": "[0, 6]",
+        "is_visible": true
+      },
+      {
+        "input": "text = \"abab\", pattern = \"ab\"",
+        "expected": "[0, 1, 2]",
+        "is_visible": true
+      },
+      {
+        "input": "text = \"aaaa\", pattern = \"aa\"",
+        "expected": "[0, 1, 2]",
+        "is_visible": true
+      },
+      {
+        "input": "text = \"abc\", pattern = \"abcd\"",
+        "expected": "[]",
+        "is_visible": true
+      },
+      {
+        "input": "text = \"xyz\", pattern = \"abc\"",
+        "expected": "[]",
+        "is_visible": true
+      },
+      {
+        "input": "text = \"a\", pattern = \"a\"",
+        "expected": "[0]",
+        "is_visible": false
+      },
+      {
+        "input": "text = \"baa\", pattern = \"aab\"",
+        "expected": "[0]",
+        "is_visible": false
+      },
+      {
+        "input": "text = \"abcdefg\", pattern = \"gfedcba\"",
+        "expected": "[0]",
+        "is_visible": false
+      },
+      {
+        "input": "text = \"aabbcc\", pattern = \"abc\"",
+        "expected": "[1, 2, 3]",
+        "is_visible": false
+      },
+      {
+        "input": "text = \"zzzz\", pattern = \"zz\"",
+        "expected": "[0, 1, 2]",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "Google",
+      "Facebook"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "You need to check every substring of length equal to the pattern length. The key insight is that you do not need to re-examine the entire window each time — you only need to update one character coming in and one going out.",
+      "Use a character frequency array of size 26 (one for each lowercase letter) for both the pattern and the current window. Two windows are anagrams if and only if their frequency arrays are identical.",
+      "Initialize the window frequency array using the first m characters of text. Then slide the window: increment the count for the new character entering the right end, decrement the count for the character leaving the left end, and check if the two frequency arrays match. Comparing two length-26 arrays is O(1)."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_4",
+    "title": "Pipeline Pressure Equalizer",
+    "difficulty": "hard",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Background\nAn engineer monitors pressure readings across a pipeline divided into segments. Each segment has a pressure value (which can be negative, indicating suction). The engineer needs to find the **best contiguous subsegment** to activate in order to maximize total pressure output — but there is a twist: the pipeline is **circular**, meaning the last segment connects back to the first.\n\n## Task\nGiven a circular array `pressure` of integers, return the **maximum possible sum of any non-empty contiguous subarray**, where the subarray can wrap around from the end of the array back to the beginning.\n\nA contiguous subarray in the circular sense either:\n1. Does **not** wrap around (a normal subarray), or\n2. **Wraps around** — using elements from the end and the beginning of the array.\n\nNote: The subarray must be non-empty. If the entire array is selected (which is always non-wrapping in a degenerate sense), that is also valid.\n\n## Function Signature\n```python\ndef max_circular_pressure(pressure: list[int]) -> int:\n```\n\n## Input Format\n- A single line containing space-separated integers representing pressure values.\n\n## Output Format\n- A single integer: the maximum subarray sum in the circular arrangement.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 30000,
+      "value_min": -30000,
+      "value_max": 30000,
+      "time_limit": "1 second",
+      "memory_limit": "256 MB"
+    },
+    "examples": [
+      {
+        "input": "[1, -2, 3, -2]",
+        "output": "3",
+        "explanation": "The non-wrapping subarray [3] gives sum 3, which is the maximum. No wrapping subarray yields a higher sum. For instance, wrapping to get [1] + [] from the right and [3] from the middle doesn't help beyond 3."
+      },
+      {
+        "input": "[5, -3, 5]",
+        "output": "10",
+        "explanation": "The wrapping subarray consisting of the last element (5) and the first element (5) gives sum 10. This is achieved by wrapping: take segment [5] from the end and [5] from the beginning. The non-wrapping maximum is also 5 (single element) or 5 + (-3) + 5 = 7. The wrapping option [5, ..., 5] = 10 is best."
+      },
+      {
+        "input": "[-3, -2, -1]",
+        "output": "-1",
+        "explanation": "All values are negative. The maximum subarray must still be non-empty, so we pick the single element with the highest value, which is -1 at index 2."
+      },
+      {
+        "input": "[3, 1, 2]",
+        "output": "6",
+        "explanation": "The entire array sums to 6. Since all elements are positive, the best subarray is the entire array [3, 1, 2] = 6. This is a non-wrapping case."
+      },
+      {
+        "input": "[8, -1, -3, 8]",
+        "output": "16",
+        "explanation": "The wrapping subarray takes 8 (last element) and 8 (first element): sum = 16. Alternatively, the non-wrapping subarray [8, -1, -3, 8] = 12, or [8] = 8. The wrapping option gives the maximum of 16."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Try every possible (start, length) pair in the circular array. For each starting index, expand the subarray up to length n (with wraparound using modulo indexing) and track the maximum sum found. This is O(n^2).",
+        "code": "def max_circular_pressure(pressure: list[int]) -> int:\n    n = len(pressure)\n    max_sum = float('-inf')\n\n    for start in range(n):\n        current_sum = 0\n        for length in range(1, n + 1):\n            idx = (start + length - 1) % n\n            current_sum += pressure[idx]\n            max_sum = max(max_sum, current_sum)\n\n    return max_sum",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Key insight: a wrapping subarray is equivalent to the total array sum minus the minimum non-wrapping subarray. So the circular maximum is max(Kadane's max, total_sum - Kadane's min). Apply Kadane's algorithm twice: once for maximum subarray, once for minimum subarray. The answer is max(max_kadane, total_sum - min_kadane). Special case: if all elements are negative, the wrapping candidate would be total_sum - total_sum = 0 (empty), which is invalid. Detect this by checking if max_kadane < 0 and return max_kadane directly in that case.",
+        "code": "def max_circular_pressure(pressure: list[int]) -> int:\n    n = len(pressure)\n\n    # --- Kadane's for maximum subarray (non-circular) ---\n    max_sum = pressure[0]\n    cur_max = pressure[0]\n    for i in range(1, n):\n        cur_max = max(pressure[i], cur_max + pressure[i])\n        max_sum = max(max_sum, cur_max)\n\n    # --- Kadane's for minimum subarray ---\n    min_sum = pressure[0]\n    cur_min = pressure[0]\n    for i in range(1, n):\n        cur_min = min(pressure[i], cur_min + pressure[i])\n        min_sum = min(min_sum, cur_min)\n\n    total = sum(pressure)\n\n    # If all elements are negative, the wrapping case (total - min_sum)\n    # would equal 0 (selecting an empty subarray), which is invalid.\n    # In that case, max_sum (a single negative element) is the answer.\n    if max_sum < 0:\n        return max_sum\n\n    # The wrapping maximum = total_sum - minimum non-wrapping subarray\n    return max(max_sum, total - min_sum)",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "[1, -2, 3, -2]",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "[5, -3, 5]",
+        "expected": "10",
+        "is_visible": true
+      },
+      {
+        "input": "[-3, -2, -1]",
+        "expected": "-1",
+        "is_visible": true
+      },
+      {
+        "input": "[3, 1, 2]",
+        "expected": "6",
+        "is_visible": true
+      },
+      {
+        "input": "[8, -1, -3, 8]",
+        "expected": "16",
+        "is_visible": true
+      },
+      {
+        "input": "[7]",
+        "expected": "7",
+        "is_visible": false
+      },
+      {
+        "input": "[-5]",
+        "expected": "-5",
+        "is_visible": false
+      },
+      {
+        "input": "[-2, 4, -5, 4, -2]",
+        "expected": "8",
+        "is_visible": false
+      },
+      {
+        "input": "[10, -3, -4, 7, 6, 5, -4, -1]",
+        "expected": "31",
+        "is_visible": false
+      },
+      {
+        "input": "[-1, -2, -3, -4, -5]",
+        "expected": "-1",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Google",
+      "Amazon",
+      "Microsoft",
+      "Adobe",
+      "Uber"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "Start by solving the non-circular version using Kadane's algorithm. The circular version adds one additional case: the best subarray wraps around from the end back to the beginning.",
+      "A wrapping subarray is everything EXCEPT some middle subarray. So the maximum wrapping subarray sum equals the total array sum minus the minimum contiguous subarray sum. Can you run Kadane's twice — once for maximum and once for minimum?",
+      "Combine both results: answer = max(max_kadane, total_sum - min_kadane). Be careful about the all-negative edge case: if every element is negative, total_sum - min_kadane = 0, which represents an empty selection (invalid). In this case, max_kadane (a negative value) is the correct answer, detectable by checking if max_kadane < 0."
+    ]
+  }
+]

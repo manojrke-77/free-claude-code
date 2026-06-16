@@ -1,0 +1,104 @@
+{
+  "verdict": "rejected",
+  "article_review": {
+    "technical_errors": [
+      {
+        "location": "Practice Problems — Easy #2 (Valid Palindrome), GFG link",
+        "error": "The GFG hyperlink provided is https://www.geeksforgeeks.org/check-given-string-rotation-another/ which leads to 'Check if a string is a rotation of another string' — completely unrelated to palindrome checking.",
+        "fix": "Replace with the correct GFG palindrome URL: https://www.geeksforgeeks.org/c-program-check-given-string-palindrome/"
+      },
+      {
+        "location": "Example 8 (KMP) — kmp_search empty-pattern guard",
+        "error": "The guard `if not pattern: return 0` returns 0 (implying a match at index 0) for an empty pattern. By convention in most interview contexts and Python's str.find(), an empty pattern matches at every position; returning 0 without documentation is misleading and could be flagged as incorrect in Google/Meta interviews.",
+        "fix": "Add a comment: '# Convention: empty pattern treated as found at index 0; adjust per problem spec.' OR return all indices [0..len(text)] if the problem guarantees non-empty patterns. Alternatively, document the chosen behavior explicitly so students are aware."
+      },
+      {
+        "location": "Three Sum (Example 6) — duplicate-skipping for right pointer",
+        "error": "The code skips duplicates for the left pointer after finding a triplet (while loop on left), but never skips duplicates for the right pointer. For inputs such as [-4, -1, -1, 0, 1, 2] this produces correct output by coincidence of convergence, but for inputs like [0, 0, 0, 0, 0] the left-only dedup is still sufficient — however the asymmetry is a pedagogical gap that will confuse students who try to generalize the pattern.",
+        "fix": "After appending the triplet and advancing left (and deduping left), also add: `while left < right and nums[right] == nums[right + 1]: right -= 1` followed by `right -= 1`. This makes the deduplication symmetric and explicit, matches every canonical Three Sum reference implementation, and prevents subtle bugs on edge-case inputs students may try."
+      }
+    ],
+    "pedagogical_issues": [
+      {
+        "location": "Intermediate — Pattern Recognition Decision Tree",
+        "issue": "The decision tree says 'Sliding Window (if only positive numbers or monotonic window)' but does not explain what 'monotonic window' means for a beginner. A tier-3 student will not know whether their problem qualifies.",
+        "suggestion": "Add one sentence: 'Monotonic means: adding an element to the window always increases (or maintains) the metric you are tracking — which is only guaranteed when all numbers are positive.'"
+      },
+      {
+        "location": "Advanced — KMP section",
+        "issue": "The LPS build loop is presented without a worked trace. The article jumps from the definition to the full code. Tier-1 B.Tech students studying for Google interviews need to see at least one step-by-step LPS construction (e.g., for 'ABABC') to understand the `length = lps[length-1]` fallback line.",
+        "suggestion": "Add a 5-row trace table for pattern='ABABC' showing i, pattern[i], length, and resulting lps[i] at each step, mirroring the Kadane trace table provided for beginners."
+      },
+      {
+        "location": "Beginner — String immutability section",
+        "issue": "The article explains the O(n²) string concatenation trap well, but the fix shown (appending chars to a list) is for iterating over a string. The article does not show the analogous fix for the specific reversal pattern (`result = char + result`) tested in MCQ q_ds_arrays_8, leaving a gap between the article and its own MCQ.",
+        "suggestion": "Add a one-liner example: `result = ''.join(reversed(s))` or show `parts.insert(0, char)` is also O(n²) and that `parts.append(char); parts.reverse()` is the O(n) idiom."
+      }
+    ],
+    "completeness": {
+      "covered_subtopics": [
+        "Array memory model and O(1) access",
+        "Python list operations and complexity (append, insert, pop)",
+        "String immutability and O(n²) concatenation trap",
+        "Kadane's Algorithm with full trace",
+        "Two-pointer (same direction — move zeros)",
+        "Two-pointer (convergence — palindrome, three sum)",
+        "Prefix Sum + Hashmap (subarray sum = k)",
+        "Variable sliding window (longest unique substring)",
+        "Sliding window with deque (window maximum)",
+        "KMP pattern matching with LPS array",
+        "Pattern recognition decision tree"
+      ],
+      "missing_subtopics": [
+        "Dutch National Flag / 3-way partition (commonly asked at Amazon/Microsoft for array rearrangement beyond move-zeros)",
+        "2D arrays / matrix traversal (mentioned in company table for Google as '2D Kadane' but never taught)",
+        "Binary search on arrays (not covered; Microsoft and Amazon routinely combine arrays with binary search)",
+        "Cyclic sort / find missing/duplicate number pattern (extremely common in TCS/Wipro and Amazon OA)",
+        "String: valid anagram check (mentioned in company table under TCS/Wipro but no example provided)"
+      ]
+    },
+    "accessibility_score": 7,
+    "crispness_score": 8
+  },
+  "mcq_review": {
+    "errors": [
+      {
+        "question_id": "q_ds_arrays_6",
+        "error": "The explanation states 'the longest valid window achieved is wke (indices 3-5)'. In the string 'pwwkew' (p=0,w=1,w=2,k=3,e=4,w=5), indices 3-5 spell 'k','e','w' = 'kew', not 'wke'. The first length-3 window is at indices 2-4 ('w','k','e' = 'wke'). The stated indices are wrong.",
+        "fix": "Change to: 'the longest valid window achieved is wke (indices 2–4) with length 3. Equivalently the window kew (indices 3–5) also has length 3 and is the final state of the window.' The answer B) 3 is correct and does not change."
+      },
+      {
+        "question_id": "q_ds_arrays_9",
+        "error": "Distractor B explanation contains an unclear causal chain: 'because 6 > 5 and enters the deque by popping 3 but not 5 — however 5 was already removed when 6 was processed'. This is self-contradictory: it says 6 does NOT pop 5, then immediately says 5 WAS removed when 6 was processed. The actual deque state when i=6 (num=6) is dq=[4,5] (indices of values 5 and 3). Processing num=6: pop index 5 (nums[5]=3 < 6), pop index 4 (nums[4]=5 < 6), append index 6. So 5 IS popped. The explanation contradicts itself.",
+        "fix": "Replace distractor B explanation with: 'When processing index 6 (value 6), the deque contains indices 4 (value 5) and 5 (value 3). Both are popped because 5 < 6 and 3 < 6, leaving only index 6 in the deque. The maximum of window [5,3,6] is therefore 6, not 5.'"
+      }
+    ],
+    "distractor_quality_score": 8,
+    "explanation_quality_score": 7
+  },
+  "coding_problems_review": {
+    "errors": [
+      {
+        "problem_id": "ALL",
+        "error": "No finalized coding problems JSON was submitted for review. The content submission ends with design notes and a partial trace ('Thought: I need to create 4 original coding problems...') but zero actual problem objects were included in the payload. This is a critical submission gap — the quality gate cannot approve content that was never submitted.",
+        "fix": "Submit the four coding problems (Easy: Equilibrium/Pivot index; Medium-1: Longest subarray sum ≤ B; Medium-2: Anagram occurrences; Hard: Max sum of two non-overlapping subarrays of given lengths) as a complete JSON array with fields: id, title, difficulty, problem_statement, constraints, examples (with traced expected outputs), hints (progressive, 3 minimum), solution_approach, solution_code, complexity_analysis, and test_cases (minimum 6 per problem including edge cases). The design traces in the submission notes are promising and internally consistent — the reviewer verified arr=[2,1,4,3,5] L=2 M=2 → 13 and arr=[3,8,1,3,2,1,8,9,0] L=3 M=2 → 29 are both correct."
+      }
+    ],
+    "statement_clarity_score": 0,
+    "test_case_coverage_score": 0,
+    "solution_optimality_score": 0
+  },
+  "required_fixes": [
+    "1. CRITICAL — Fix the wrong GFG URL in Practice Problems Easy #2 (Valid Palindrome). The current URL https://www.geeksforgeeks.org/check-given-string-rotation-another/ leads to string rotation content, not palindrome. Replace with https://www.geeksforgeeks.org/c-program-check-given-string-palindrome/ or equivalent correct GFG palindrome page.",
+    "2. CRITICAL — Submit the four coding problems as a complete JSON array. The submission is missing all coding problem objects. The ds_arrays content module cannot be approved without its coding problem set. Design work in the notes is verified correct; it must be formatted into the required schema.",
+    "3. REQUIRED — Fix q_ds_arrays_6 explanation: change 'wke (indices 3-5)' to 'wke (indices 2-4)'. Indices 3-5 in 'pwwkew' are k,e,w = 'kew', not 'wke'. The correct answer B) 3 is unaffected.",
+    "4. REQUIRED — Fix q_ds_arrays_9 distractor B explanation: the current text is self-contradictory ('enters the deque by popping 3 but not 5 — however 5 was already removed when 6 was processed'). Replace with a clear deque-state trace showing that when i=6 (value=6), both indices 5 (value 3) and 4 (value 5) are popped because both values are less than 6, leaving index 6 alone in the deque.",
+    "5. REQUIRED — Add a right-pointer duplicate skip in the Three Sum code (Example 6): after `left += 1` and the existing while-loop deduping left, add `while left < right and nums[right] == nums[right + 1]: right -= 1` then `right -= 1`. This matches every canonical reference implementation and prevents subtle duplicate-output bugs on edge inputs.",
+    "6. RECOMMENDED — Add a 5-row step-by-step LPS construction trace for pattern 'ABABC' in the KMP section. The Kadane section has a detailed trace table; the KMP section does not. This inconsistency disadvantages advanced students (Google/Microsoft track) who need to hand-trace LPS in interviews.",
+    "7. RECOMMENDED — Add a one-line note in the Pattern Recognition Decision Tree clarifying what 'monotonic window' means: 'Monotonic means adding an element to the window always increases the tracked metric — guaranteed only when all numbers are non-negative.'",
+    "8. RECOMMENDED — Add missing subtopics to the article or flag them explicitly as 'out of scope': (a) Dutch National Flag / 3-way partition, (b) Cyclic sort / missing number, (c) valid anagram check. These are listed as TCS/Wipro patterns in the company table but have no corresponding examples.",
+    "9. MINOR — Add a comment to the kmp_search empty-pattern guard (`if not pattern: return 0`) clarifying the convention chosen, since different problems and interviewers expect different behaviors for empty-pattern edge cases.",
+    "10. MINOR — In the Quick Revision Sheet, the KMP bullet says 'LPS[i] is always ≤ i'. This is correct but could be strengthened to 'LPS[i] < i+1 (strictly less than the length of the prefix)' to clarify the 'proper' prefix constraint for students who confuse LPS[i] ≤ i with LPS[i] < i."
+  ],
+  "reviewer_notes": "The article is well-structured and pedagogically strong at the beginner and intermediate levels. The Kadane trace table is excellent, the prefix-sum {0:1} seed explanation is the clearest I have seen in a placement-prep article, and the sliding window decision tree is genuinely useful. Technical accuracy is high for all code examples that were spot-checked: Kadane output (6), move_zeros output ([1,3,12,0,0]), subarray_sum_equals_k outputs (2 and 2), KMP on 'AAACAAAB' returning 4, and sliding_window_max on the standard test case ([3,3,5,5,6,7]) all verified correct. However, the submission has two blocking issues that prevent approval: (1) a wrong GFG hyperlink in the practice section that would send students to unrelated content — a trust-damaging error if published, and (2) the coding problems component is entirely missing from the submission, replaced by design scratch-notes. The MCQ set is of high quality overall — distractors are plausible and non-trivial — but two explanation errors (wrong substring indices in q6, self-contradictory deque description in q9) must be corrected. The Three Sum implementation has an asymmetric duplicate-skip that will produce incorrect results on certain inputs and should be fixed before publication. Once these issues are resolved, this content is close to approvable; the core concepts are accurate and the progression from mailbox mental model to KMP is genuinely well-designed."
+}

@@ -1,0 +1,222 @@
+[
+  {
+    "id": "q_ds_arrays_1",
+    "question": "What is the time complexity of accessing an element by index in an array?",
+    "options": [
+      "A) O(n)",
+      "B) O(log n)",
+      "C) O(1)",
+      "D) O(n²)"
+    ],
+    "correct_index": 2,
+    "explanation": "Arrays store elements in contiguous memory locations. The address of any element can be computed directly as: address(a[i]) = address(a[0]) + i × size(object). This formula gives the exact memory address in a single step, making index-based access O(1) regardless of array size.",
+    "distractor_explanations": [
+      "A) O(n) is the complexity for searching an unsorted array (linear search), not for accessing an element at a known index.",
+      "B) O(log n) is the complexity for binary search on a sorted array, which requires comparisons across elements — not direct index access.",
+      "D) O(n²) applies to nested-loop algorithms such as bubble sort, not to simple array element access."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Fundamentals",
+    "company_pattern": "TCS NQT",
+    "hint": "Think about how the memory address of arr[i] is calculated using arr[0] and index i."
+  },
+  {
+    "id": "q_ds_arrays_2",
+    "question": "Which of the following correctly checks if the string 'racecar' is a palindrome using a two-pointer approach in Python?",
+    "options": [
+      "A) Compare s[0] with s[1], s[1] with s[2], and so on until the middle.",
+      "B) Initialize left=0 and right=len(s)-1; compare s[left] and s[right]; increment left and decrement right until left >= right.",
+      "C) Initialize left=0 and right=len(s); compare s[left] and s[right] in a while loop.",
+      "D) Sort the string and check if the sorted version equals the original."
+    ],
+    "correct_index": 1,
+    "explanation": "The two-pointer palindrome check places one pointer at the start (index 0) and another at the end (index len(s)-1). Characters are compared pairwise; pointers move inward until they meet or cross. For 'racecar', all pairs match (r==r, a==a, c==c), so it returns True.",
+    "distractor_explanations": [
+      "A) Comparing adjacent elements (s[0] with s[1]) checks for consecutive duplicate characters, not for palindrome symmetry around the center.",
+      "C) Initializing right=len(s) (without subtracting 1) points past the last valid index, causing an IndexError on the first comparison s[right].",
+      "D) Sorting a string checks for anagram properties, not palindrome properties; 'racecar' sorted is 'aaccer', which does not equal 'racecar'."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Anagram and Palindrome Patterns",
+    "company_pattern": "Wipro Elite",
+    "hint": "A palindrome reads the same from both ends — which pair of indices should you compare first?"
+  },
+  {
+    "id": "q_ds_arrays_3",
+    "question": "An array arr = [1, 2, 4, 5, 6] contains integers from 1 to 6 with exactly one number missing. What is the most efficient way to find the missing number?",
+    "options": [
+      "A) Sort the array and scan for the gap between consecutive elements.",
+      "B) Compute expected_sum = n*(n+1)/2 and subtract the actual sum of the array.",
+      "C) Use a nested loop to check each number from 1 to n against every array element.",
+      "D) Convert the array to a set and iterate from 1 to n to find the absent value."
+    ],
+    "correct_index": 1,
+    "explanation": "The expected sum of integers 1 through n is n*(n+1)/2. For n=6, expected_sum = 21. The actual sum of [1,2,4,5,6] = 18. Missing number = 21 - 18 = 3. This approach runs in O(n) time and O(1) space — optimal for this problem.",
+    "distractor_explanations": [
+      "A) Sorting takes O(n log n) time, which is less efficient than the O(n) sum formula; also, scanning for gaps adds extra complexity.",
+      "C) A nested loop checking each candidate against every element runs in O(n²) time, which is the worst approach among the options.",
+      "D) Converting to a set and iterating is O(n) time but requires O(n) extra space; the sum formula achieves O(n) time with only O(1) space."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Traversal and Manipulation",
+    "company_pattern": "TCS NQT",
+    "hint": "The sum of all integers from 1 to n follows a well-known formula. What happens when you subtract the array's actual sum from it?"
+  },
+  {
+    "id": "q_ds_arrays_4",
+    "question": "Consider the following Python code. What is the output?\n\n```python\narr = [3, 1, 4, 1, 5]\nprefix = [0] * len(arr)\nprefix[0] = arr[0]\nfor i in range(1, len(arr)):\n    prefix[i] = prefix[i-1] + arr[i]\nprint(prefix[4] - prefix[1])\n```",
+    "options": [
+      "A) 9",
+      "B) 10",
+      "C) 11",
+      "D) 8"
+    ],
+    "correct_index": 1,
+    "explanation": "Building the prefix array: prefix = [3, 4, 8, 9, 14]. The expression prefix[4] - prefix[1] = 14 - 4 = 10. This computes the range sum from index 2 to 4 (arr[2]+arr[3]+arr[4] = 4+1+5 = 10), which matches the prefix sum formula sum(L,R) = prefix[R] - prefix[L-1] with L=2, R=4.",
+    "distractor_explanations": [
+      "A) 9 would be the value of prefix[3] alone (3+1+4+1=9), not the result of prefix[4]-prefix[1].",
+      "C) 11 is obtained if one mistakenly computes prefix[4] - prefix[0] = 14 - 3 = 11, which gives the sum from index 1 to 4, not index 2 to 4.",
+      "D) 8 would result from prefix[2] - prefix[0] = 8 - 3 = 5, or from an off-by-one error in building the prefix array; it does not equal prefix[4] - prefix[1]."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Prefix Sum and Difference Arrays",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "First compute the full prefix array step by step, then evaluate the subtraction."
+  },
+  {
+    "id": "q_ds_arrays_5",
+    "question": "Given arr = [2, 1, 5, 1, 3, 2] and K = 3, what is the maximum sum of any contiguous subarray of size K?",
+    "options": [
+      "A) 8",
+      "B) 7",
+      "C) 9",
+      "D) 10"
+    ],
+    "correct_index": 2,
+    "explanation": "Using the sliding window technique: Window 1 = [2,1,5] → sum=8; Window 2 = [1,5,1] → sum=7; Window 3 = [5,1,3] → sum=9; Window 4 = [1,3,2] → sum=6. The maximum is 9, achieved by the subarray [5, 1, 3].",
+    "distractor_explanations": [
+      "A) 8 is the sum of the first window [2,1,5], which is a valid window sum but not the maximum across all windows.",
+      "B) 7 is the sum of the second window [1,5,1], which is less than the maximum window sum of 9.",
+      "D) 10 is not the sum of any contiguous subarray of size 3 in this array; the highest achievable is 9."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Sliding Window (Fixed and Variable)",
+    "company_pattern": "Amazon",
+    "hint": "Compute the sum of the first K elements, then slide the window by adding the next element and removing the first element of the previous window."
+  },
+  {
+    "id": "q_ds_arrays_6",
+    "question": "Apply Kadane's algorithm to the array [-2, 1, -3, 4, -1, 2, 1, -5, 4]. What is the maximum subarray sum?",
+    "options": [
+      "A) 7",
+      "B) 5",
+      "C) 6",
+      "D) 4"
+    ],
+    "correct_index": 2,
+    "explanation": "Tracing Kadane's algorithm: the maximum subarray is [4, -1, 2, 1] with sum = 4 + (-1) + 2 + 1 = 6. At each step, curr_sum = max(arr[i], curr_sum + arr[i]) and max_sum tracks the global maximum. The curr_sum peaks at 6 at index 6 (value 1), giving the final answer of 6.",
+    "distractor_explanations": [
+      "A) 7 is not achievable by any contiguous subarray; extending [4,-1,2,1] by adding 4 at the end gives [4,-1,2,1,-5,4]=5, not 7.",
+      "B) 5 is the value of curr_sum at index 8 (after adding 4 to the diminished subarray), which is less than the peak max_sum of 6 recorded earlier.",
+      "D) 4 is the value of arr[3] alone; starting a fresh subarray at index 3 gives curr_sum=4, but continuing through indices 4, 5, 6 raises it to 6."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Kadane's Algorithm and Variants",
+    "company_pattern": "Amazon",
+    "hint": "Trace the algorithm index by index: at each position, decide whether to extend the previous subarray or start a new one."
+  },
+  {
+    "id": "q_ds_arrays_7",
+    "question": "What does the following Python function return for s = \"abba\"?\n\n```python\ndef longest_no_repeat(s):\n    last_seen = {}\n    left = 0\n    max_len = 0\n    for right in range(len(s)):\n        char = s[right]\n        if char in last_seen and last_seen[char] >= left:\n            left = last_seen[char] + 1\n        last_seen[char] = right\n        max_len = max(max_len, right - left + 1)\n    return max_len\n```",
+    "options": [
+      "A) 3",
+      "B) 4",
+      "C) 1",
+      "D) 2"
+    ],
+    "correct_index": 3,
+    "explanation": "Tracing for 'abba': right=0 ('a'): last_seen={'a':0}, max_len=1. right=1 ('b'): last_seen={'a':0,'b':1}, max_len=2. right=2 ('b'): 'b' in last_seen and last_seen['b']=1 >= left=0, so left=2; last_seen={'a':0,'b':2}, window='b', max_len=2. right=3 ('a'): 'a' in last_seen and last_seen['a']=0, but 0 < left=2, so left stays 2; last_seen={'a':3,'b':2}, window='ba', max_len=max(2,2)=2. Final answer is 2.",
+    "distractor_explanations": [
+      "A) 3 would be returned if the left pointer failed to correctly handle the second 'b' at index 2, incorrectly including characters outside the valid window.",
+      "B) 4 would be the length of the entire string; it is returned only if no repeating characters are detected, which is incorrect since 'a' and 'b' both repeat in 'abba'.",
+      "C) 1 would be returned only if every adjacent pair of characters were duplicates and the window could never grow beyond size 1, which is not the case for 'abba'."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Sliding Window (Fixed and Variable)",
+    "company_pattern": "Amazon",
+    "hint": "Pay careful attention to the condition `last_seen[char] >= left` — it prevents the left pointer from moving backward when a character was last seen before the current window."
+  },
+  {
+    "id": "q_ds_arrays_8",
+    "question": "Which of the following correctly describes the relationship between the Two-Pointer technique and the Sliding Window technique?",
+    "options": [
+      "A) They are identical techniques; 'two-pointer' and 'sliding window' are interchangeable terms for the same pattern.",
+      "B) Two-pointer (opposite direction) is best for pair/triplet selection on sorted arrays; sliding window (same direction) is best for contiguous subarray/substring conditions.",
+      "C) Sliding window always uses a fixed window size, while two-pointer always uses a variable window size.",
+      "D) Two-pointer requires the array to be sorted; sliding window works only on unsorted arrays."
+    ],
+    "correct_index": 1,
+    "explanation": "Two-pointer in opposite directions (one pointer at each end, moving inward) solves problems like two-sum on a sorted array or container with most water. Sliding window uses two pointers moving in the same direction to maintain a contiguous subarray or substring, expanding or shrinking based on a condition. These are distinct patterns suited to different problem shapes.",
+    "distractor_explanations": [
+      "A) The terms are not interchangeable; two-pointer and sliding window differ in pointer direction and the class of problems they solve, even though both use two index variables.",
+      "C) Sliding window can be either fixed (always size K) or variable (size changes dynamically); two-pointer size is not inherently variable — its pointers converge toward each other.",
+      "D) While two-pointer pair-sum problems require sorting, many two-pointer problems (like removing duplicates or moving zeros) do not require a sorted array; and sliding window works on both sorted and unsorted inputs."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Two-Pointer Technique",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "Think about the direction the pointers move: do they start from opposite ends, or do they both start from the same end?"
+  },
+  {
+    "id": "q_ds_arrays_9",
+    "question": "Consider Kadane's algorithm applied to the array [-5, -3, -2]. A student initializes max_sum = 0 instead of max_sum = arr[0]. What incorrect output does the student's code return, and what should the correct output be?",
+    "options": [
+      "A) Student's code returns -2; correct answer is also -2.",
+      "B) Student's code returns 0; correct answer is -2.",
+      "C) Student's code returns -5; correct answer is -2.",
+      "D) Student's code returns -2; correct answer is 0."
+    ],
+    "correct_index": 1,
+    "explanation": "When all elements are negative, the curr_sum at each step is negative, so it never exceeds 0. If max_sum is initialized to 0, it is never updated and the function returns 0 — which is wrong because no empty subarray should be considered. The correct initialization is max_sum = arr[0] = -5, after which Kadane's correctly identifies -2 (the least negative element) as the maximum subarray sum.",
+    "distractor_explanations": [
+      "A) If the student's code returned -2, that would mean max_sum was correctly updated during the loop; however, with initialization at 0 and all negative elements, max_sum is never updated, so -2 is not returned by the buggy code.",
+      "C) -5 is the first element and the initial value of curr_sum; it would only be the final answer if the algorithm incorrectly stopped at the first element without continuing the loop.",
+      "D) 0 is the student's incorrect output, not the correct answer; the correct output for an all-negative array should be the largest (least negative) element, which is -2."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_arrays",
+    "subtopic": "Kadane's Algorithm and Variants",
+    "company_pattern": "Amazon",
+    "hint": "What happens to max_sum when every element is negative and max_sum starts at 0? Will it ever be updated?"
+  },
+  {
+    "id": "q_ds_arrays_10",
+    "question": "For the KMP algorithm applied to text = \"aabaacaadaabaaba\" and pattern = \"aaba\", what is the LPS (Longest Proper Prefix which is also a Suffix) array for the pattern \"aaba\"?",
+    "options": [
+      "A) [0, 1, 0, 1]",
+      "B) [0, 1, 2, 1]",
+      "C) [1, 1, 0, 1]",
+      "D) [0, 0, 0, 1]"
+    ],
+    "correct_index": 0,
+    "explanation": "Building LPS for 'aaba': lps[0]=0 (always 0 by definition). lps[1]: 'a'=='a' (pattern[1]==pattern[0]), so lps[1]=1. lps[2]: 'b' != 'a' (mismatch), length falls back to lps[0]=0; 'b' != 'a' still, so lps[2]=0. lps[3]: 'a'=='a' (pattern[3]==pattern[0]), so lps[3]=1. Final LPS = [0, 1, 0, 1].",
+    "distractor_explanations": [
+      "B) [0, 1, 2, 1] would be the LPS for a pattern like 'aabaa' where lps[2] can be 2; for 'aaba', pattern[2]='b' mismatches pattern[0]='a', so lps[2] must be 0, not 2.",
+      "C) [1, 1, 0, 1] is invalid because lps[0] is always 0 by definition — a proper prefix cannot be the entire string itself, so a single-character prefix has no proper prefix.",
+      "D) [0, 0, 0, 1] incorrectly sets lps[1]=0; since pattern[1]='a' equals pattern[0]='a', the prefix 'a' is also a suffix of 'aa', making lps[1]=1, not 0."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_arrays",
+    "subtopic": "String Matching (Naive, KMP Intro)",
+    "company_pattern": "Amazon",
+    "hint": "Build the LPS array character by character: lps[0] is always 0. For each subsequent index, check if pattern[i] matches pattern[length] where length starts at 0."
+  }
+]

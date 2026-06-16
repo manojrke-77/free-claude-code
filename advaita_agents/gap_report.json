@@ -1,0 +1,286 @@
+{
+  "generated_at": "2026-06-15T17:02:25.186274+00:00",
+  "overall_coverage_pct": 0.0,
+  "summary": {
+    "total_topics": 44,
+    "fully_covered": 0,
+    "partial_coverage": 1,
+    "completely_missing": 43,
+    "stale_content": 0
+  },
+  "fully_covered": [],
+  "partial_coverage": [
+    {
+      "topic_id": "ds_arrays",
+      "label": "Arrays & Strings",
+      "coverage_pct": 0.25,
+      "missing_content_types": [],
+      "missing_subtopics_estimate": [],
+      "missing_difficulty_levels": [],
+      "verdict": "unknown",
+      "needs_rewrite": false,
+      "last_updated": "2026-06-15T16:50:48.515331+00:00"
+    }
+  ],
+  "completely_missing": [
+    {
+      "topic_id": "ds_linked_list",
+      "label": "Linked Lists",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "ds_stack_queue",
+      "label": "Stacks & Queues",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "ds_hash",
+      "label": "Hash Tables & Maps",
+      "weight": 10,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "ds_trees",
+      "label": "Trees",
+      "weight": 10,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "ds_heap",
+      "label": "Heaps & Priority Queues",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "ds_graphs",
+      "label": "Graphs",
+      "weight": 10,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "algo_sort_search",
+      "label": "Sorting & Searching",
+      "weight": 10,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "algo_recursion",
+      "label": "Recursion & Backtracking",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "algo_dp",
+      "label": "Dynamic Programming",
+      "weight": 10,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "algo_greedy",
+      "label": "Greedy Algorithms",
+      "weight": 7,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "algo_bit",
+      "label": "Bit Manipulation",
+      "weight": 6,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "cs_os",
+      "label": "Operating Systems",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "cs_dbms",
+      "label": "Database Management Systems",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "cs_cn",
+      "label": "Computer Networks",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "cs_oops",
+      "label": "Object-Oriented Programming",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "cs_se",
+      "label": "Software Engineering Basics",
+      "weight": 5,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "lang_c",
+      "label": "C Programming",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "lang_cpp",
+      "label": "C++",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "lang_java",
+      "label": "Java",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "lang_python",
+      "label": "Python",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "lang_js",
+      "label": "JavaScript",
+      "weight": 5,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "sd_basics",
+      "label": "System Design Fundamentals",
+      "weight": 6,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "sd_problems",
+      "label": "System Design Problems (Fresher Level)",
+      "weight": 5,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "web_frontend",
+      "label": "Frontend Basics",
+      "weight": 4,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "web_backend",
+      "label": "Backend Basics",
+      "weight": 4,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "apti_quant",
+      "label": "Quantitative Aptitude",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "apti_logical",
+      "label": "Logical Reasoning",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "apti_verbal",
+      "label": "Verbal Ability & English",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "apti_tech_mcq",
+      "label": "Technical MCQs (CS Theory)",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "hr_questions",
+      "label": "HR Interview Questions",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "hr_behavioral",
+      "label": "Behavioral Questions (STAR Method)",
+      "weight": 7,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "hr_gd",
+      "label": "Group Discussion & Communication",
+      "weight": 6,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "hr_resume",
+      "label": "Resume & LinkedIn Building",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "company_tcs",
+      "label": "TCS (Ninja & Digital)",
+      "weight": 9,
+      "urgency": "CRITICAL"
+    },
+    {
+      "topic_id": "company_infosys",
+      "label": "Infosys (SP & DSE)",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "company_wipro",
+      "label": "Wipro (Elite NTH)",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "company_amazon",
+      "label": "Amazon SDE-1",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "company_google",
+      "label": "Google L3 / University Graduate",
+      "weight": 7,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "company_microsoft",
+      "label": "Microsoft SDE",
+      "weight": 7,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "company_meta",
+      "label": "Meta E3 / University Grad",
+      "weight": 6,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "company_mass",
+      "label": "Mass Recruiters (Cognizant, Accenture, Capgemini, HCL, IBM)",
+      "weight": 8,
+      "urgency": "HIGH"
+    },
+    {
+      "topic_id": "emerging_ai",
+      "label": "AI/ML Basics",
+      "weight": 4,
+      "urgency": "MEDIUM"
+    },
+    {
+      "topic_id": "emerging_cloud",
+      "label": "Cloud Computing Basics",
+      "weight": 4,
+      "urgency": "MEDIUM"
+    }
+  ],
+  "stale_content": []
+}
