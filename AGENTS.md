@@ -41,10 +41,11 @@ for v in ("ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"):
 
 ```
 advaita_agents/
-  main.py                  # CLI entry point (4 commands)
+  main.py                  # CLI entry point (4 commands: roadmap, produce, interactive, gap)
   crew.py                  # Crew assembly (TopicStrategyCrew, ContentProductionCrew)
   taxonomy.py              # 44-topic master taxonomy + scoring constants + utilities
   interactive.py           # 4-step interactive topic selection wizard
+  test_reviewer.py         # Isolated Reviewer test (~$0.10 vs $1.00 full pipeline)
   agents/
     content_agents.py      # 5 production agents (Research→Writer→Quiz→Coding→Reviewer)
     topic_strategist.py    # 1 strategy agent (roadmap planning, demand signals)
@@ -120,16 +121,26 @@ Task prompts in `content_tasks.py` contain ~25 guardrails organized into 6 root-
 
 Guardrails are marked `⛔ BAN` (zero-tolerance), `⛔ CRITICAL` (auto-rejection on violation), or unmarked (quality requirement — accumulates toward rejection). When content is repeatedly rejected, classify the reviewer's error list against these categories. If an error pattern doesn't fit an existing guardrail, add one that targets the root cause in the appropriate task description.
 
-**Key discovery — `⛔ FINAL OUTPUT RULE` as the universal format-compliance fix:** Positional salience matters. A guardrail in the middle of a 60-line task description is invisible; the same guardrail as the LAST LINE before `expected_output` reliably prevents "Thought:" preambles. All three Claude agents (Quiz, Coding, Reviewer) now end with this pattern:
+**Key discovery — prompt ordering determines token allocation:** The Quiz and Coding agents use `⛔ FINAL OUTPUT RULE` at the **bottom** of the task description (last line before `expected_output`) and it reliably prevents "Thought:" preambles — positional salience works for tasks that fit within token limits.
 
-```
-⛔ FINAL OUTPUT RULE (read this last — it overrides everything above):
-Your response MUST start with '[' (or '{' for Reviewer) and end with ']' (or '}').
-Nothing before the opening bracket/brace. No "Thought:" or "Let me" preamble.
-JUST the JSON. If even ONE character appears before/after, your submission is void.
-```
+The **Reviewer** is different: it has to check three content types (article, MCQs, coding) AND trace code examples. When the prompt said "trace EVERY example" before "write JSON," the model exhausted all 8192 tokens on hand-tracing (run 18 traced 15+ examples mid-response) and produced no verdict JSON. The fix is a **two-tier structure**:
 
-Before this fix, the Quiz and Reviewer agents regularly consumed all tokens on internal monologue traces, producing no valid JSON. After the fix, all three agents produce valid JSON (Quiz: 100%, Reviewer: produces valid JSON but may wrap in `{{ }}` from template confusion).
+1. **TOP — Token budget warning** (before the checklist): explains *why* tracing kills the output. "The #1 pipeline failure is: you trace 15+ examples, run out of tokens, and produce NO JSON at all."
+
+2. **BOTTOM — Short FINAL REMINDER** (reinforces): "If you catch yourself drafting a trace instead of JSON — STOP and switch to JSON immediately."
+
+3. **SPOT-CHECK replaces "trace EVERY":** "Trace 2-3 examples per article section, 2-3 per coding problem — NOT all of them. If a spot-check reveals an error, dig deeper on THAT problem only."
+
+The key insight: the impulse to "be thorough" + examples → the model traces everything. The fix isn't just repositioning text — it's removing the contradictory "trace EVERY" instruction entirely and adding a concrete numeric bound.
+
+### Isolated Reviewer testing (`test_reviewer.py`)
+
+`test_reviewer.py` runs ONLY the Reviewer agent against previously-generated content, bypassing the Research/Writer/Quiz/Coding agents entirely. **Cost: ~$0.10 vs ~$1.00 for a full pipeline run.** Used to verify Reviewer prompt changes before committing to a full 5-agent pipeline.
+
+- Loads article, quiz, and coding content from `content_output/<topic_id>/combined_*.json`
+- Creates a minimal Crew with just the Reviewer agent
+- Validates: no "Thought:" preamble, valid JSON, verdict field present
+- Run: `uv run python advaita_agents/test_reviewer.py`
 
 ### Post-production JSON validation
 
@@ -144,15 +155,21 @@ After CrewAI kickoff, `_validate_task_outputs()` in `main.py` runs structural ch
 
 Validation errors are printed but don't block the combined save — they surface structural failures instantly instead of burying them in the review JSON.
 
+**`_save_task_output()` wrapping:** When a raw task output fails `json.loads()`, it's wrapped as `{"raw_output": "<original text>"}`. This means individual task JSON files (e.g. `review_report_*.json`) have a different shape than the combined JSON (where all values are raw strings). Always parse individual task outputs defensively: try `json.loads()` first, then access `data.get("raw_output", data)` if it doesn't match expectations.
+
+**Code fence parsing in verdict/coverage paths:** The Reviewer wraps its output in ` ```json ... ``` ` fences. Both verdict-reading code paths (coverage increment at ~line 938 and verdict print at ~line 968) must chain `_strip_code_fences()` then `_strip_double_braces()` before `json.loads()`. The `_validate_task_outputs()` path at line 375 already chains them correctly. Run 19 revealed both verdict paths were missing `_strip_code_fences()`, causing silent JSON parse failures that masked the Reviewer's `rejected` verdict (fell to `except → coverage_increment = 0.25`, but `max(old_0.85, 0.25) = 0.85` hid it). Fixed by adding `_strip_code_fences()` to both paths.
+
 ### Fix-cycle: automated solution validation
 
 `_validate_coding_solutions()` in `main.py` runs every coding problem's solution code against its own test cases:
 
 1. Parses the coding JSON, extracts the optimal solution code
 2. Finds the function name via a balanced-paren signature scanner
-3. Executes the code in a **sandboxed namespace** (restricted builtins + allowed stdlib modules only)
-4. Runs each test case's input through the solution and compares output to `expected`
+3. Executes the code in a **sandboxed namespace** with 22 restricted builtins (`len`, `range`, `list`, `dict`, `set`, `tuple`, `int`, `str`, `float`, `bool`, `chr`, `ord`, `min`, `max`, `sum`, `abs`, `sorted`, `enumerate`, `zip`, `map`, `filter`, `reversed`, `any`, `all`, `True`, `False`, `None`, `print`, `isinstance`, + exception types) and a whitelist of 5 stdlib modules (`collections`, `math`, `heapq`, `itertools`, `functools`) accessed via a custom `__import__` hook
+4. Runs each test case's input through the solution and compares output to the expected value
 5. Returns list of MISMATCH messages
+
+**Key detail — `"output"` vs `"expected"` key handling:** The Coding agent uses `"output"` for examples but `"expected"` for test_cases. The validator uses `case.get("expected") or case.get("output", "")` as a defensive fallback (line 650). Without this, 7/9 mismatches in run 17 were false positives.
 
 Input parsing supports three formats: bare literals (`"[3,7,1,9,4]"` → single positional arg), newline-separated assignments, and comma-separated assignments (via `_split_assignments()` state-machine parser respecting brackets/parens/quotes). Argument mapping uses `inspect.signature()` with positional fallback when input var names don't match param names.
 
@@ -171,11 +188,22 @@ All agents use **explicit `crewai.LLM()` constructors** with `max_tokens` set, N
 | **Coding Problem Designer** | `anthropic/claude-sonnet-4-6` | 10000 | 3 problems with solutions + tests (bumped from 8192; Claude Sonnet API caps at ~8192 effective output, so scope was reduced from 4→3 problems, examples 3-5→2-3, test cases 8-10→5-6) |
 | **Technical Reviewer** | `anthropic/claude-sonnet-4-6` | 8192 | Review JSON with numbered fixes |
 
-### Reviewer JSON-first constraint
+### Reviewer prompt structure (two-tier)
 
-The Reviewer task ends with `⛔ FINAL OUTPUT RULE`: the entire response must be ONLY the review JSON, starting with `{` and ending with `}`. No code traces, no "verifying…" monologue, no text outside the JSON. WRITE THE JSON FIRST with 1-2 sentence assessments. This constraint exists because the Reviewer previously consumed all 8192 tokens exhaustively tracing every code example line-by-line, producing no verdict JSON at all. The final output rule directs: "A shallow review that produces valid JSON is FAR better than a thorough review that produces nothing."
+The Reviewer is the quality bottleneck — it checks articles, MCQs, and coding problems in a single run with only 8192 output tokens. Run 18 revealed that the instruction "trace EVERY example" contradicted "write JSON first" — the thoroughness impulse won and the model consumed all tokens on hand-tracing with no verdict JSON.
 
-**Note:** The Reviewer sometimes confuses `{{` in Python format-string templates with literal output, producing `{{...}}` (double-brace wrapper). The `_strip_double_braces()` function in `main.py` normalizes this back to `{...}` before parsing.
+The current prompt uses a **token-budget-first** design:
+
+1. **Token budget warning at the TOP** (before any checklist) — ~100 tokens that frame the budget constraint as the first thing the model reads
+2. **"YOUR FIRST ACTION: Type a single opening curly brace"** — concrete behavioral instruction
+3. **Checklist with SPOT-CHECK limits** — "trace 2-3 examples per article section, 2-3 per coding problem — NOT all of them"
+4. **Short FINAL REMINDER at the bottom** — reinforces the top warning without contradicting it
+
+The old `FINAL OUTPUT RULE` said "read this last — it overrides everything above" which created an adversarial relationship between thoroughness and output. The new design makes them allies: you CAN spot-check, just do it inside the JSON.
+
+**Verified working in run 19:** The two-tier structure produced valid JSON (~4.7K tokens of 8K budget, 56% headroom), no "Thought:" preamble, spot-checked 3/3 coding problems and 8/10 MCQs (not "EVERY" example). The Reviewer correctly identified 3 CRITICAL bugs (factually wrong MCQ answer where correct value wasn't even an option, duplicated malformed coding example, wrong test-case expected output) plus 2 HIGH issues (misleading code conditional, self-contradictory distractor explanation). Verdict: `rejected`.
+
+**Coverage mapping:** `verdict=rejected → 0.25`, `approved_with_minor_fixes → 0.85`, `approved → 1.0` in `published_index.json`.
 
 ### Known transient failures
 
@@ -201,6 +229,7 @@ uv run python advaita_agents/main.py produce --topic-id ds_arrays  # produce one
 uv run python advaita_agents/main.py produce               # produce all TIER 1 topics
 uv run python advaita_agents/main.py interactive           # interactive wizard
 uv run python advaita_agents/main.py gap                   # gap analysis (local, instant)
+uv run python advaita_agents/test_reviewer.py              # isolated Reviewer test (~$0.10, no full pipeline)
 ```
 
 ## CODING ENVIRONMENT

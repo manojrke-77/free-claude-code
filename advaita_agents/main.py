@@ -43,9 +43,13 @@ for _proxy_var in ("ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"):
 # CLAUDE: Writer, Quiz Designer, Coding Problem Designer, Technical Reviewer
 _MISSING_KEYS: list[str] = []
 if not os.getenv("DEEPSEEK_API_KEY"):
-    _MISSING_KEYS.append("DEEPSEEK_API_KEY -> needed by Research Agent + Topic Strategist")
+    _MISSING_KEYS.append(
+        "DEEPSEEK_API_KEY -> needed by Research Agent + Topic Strategist"
+    )
 if not os.getenv("ANTHROPIC_API_KEY"):
-    _MISSING_KEYS.append("ANTHROPIC_API_KEY -> needed by 4 Claude agents (Writer, Quiz, Coding, Reviewer)")
+    _MISSING_KEYS.append(
+        "ANTHROPIC_API_KEY -> needed by 4 Claude agents (Writer, Quiz, Coding, Reviewer)"
+    )
 if not os.getenv("SERPER_API_KEY"):
     _MISSING_KEYS.append(
         "SERPER_API_KEY -> needed by Topic Strategist + Research Agent (web search)"
@@ -296,25 +300,21 @@ def _validate_task_outputs(
                             )
                             break
                         if "correct_index" not in q:
-                            errors.append(
-                                f"QUIZ {qid}: Missing 'correct_index' field."
-                            )
-                        if "options" not in q or not isinstance(
-                            q["options"], list
-                        ):
+                            errors.append(f"QUIZ {qid}: Missing 'correct_index' field.")
+                        if "options" not in q or not isinstance(q["options"], list):
                             errors.append(
                                 f"QUIZ {qid}: Missing or invalid 'options' array."
                             )
-                        elif q.get("correct_index", -1) >= len(
-                            q.get("options", [])
-                        ):
+                        elif q.get("correct_index", -1) >= len(q.get("options", [])):
                             errors.append(
                                 f"QUIZ {qid}: correct_index "
                                 f"{q.get('correct_index')} is out of range "
                                 f"(only {len(q['options'])} options)."
                             )
     elif expected_quiz_count > 0:
-        errors.append("QUIZ: No quiz content produced at all — agent may have failed silently.")
+        errors.append(
+            "QUIZ: No quiz content produced at all — agent may have failed silently."
+        )
 
     # ── Coding problems validation ───────────────────────────────────────
     coding_raw = task_outputs.get("coding_problems")
@@ -358,16 +358,16 @@ def _validate_task_outputs(
                             break
             except json.JSONDecodeError as exc:
                 pos = exc.pos
-                snippet = (
-                    coding_text[max(0, pos - 40) : pos + 40] if pos > 0 else "N/A"
-                )
+                snippet = coding_text[max(0, pos - 40) : pos + 40] if pos > 0 else "N/A"
                 errors.append(
                     f"CODING: JSON is invalid — {exc}. Position {pos} context: "
                     f"'{snippet}'. Output is likely truncated (not enough max_tokens) "
                     "or contains invalid JSON constructs."
                 )
     elif expected_coding_count > 0:
-        errors.append("CODING: No coding problems produced at all — agent may have failed silently.")
+        errors.append(
+            "CODING: No coding problems produced at all — agent may have failed silently."
+        )
 
     # ── Review report validation ────────────────────────────────────────────
     review_raw = task_outputs.get("review_report")
@@ -400,15 +400,15 @@ def _validate_task_outputs(
                     )
             except json.JSONDecodeError as exc:
                 pos = exc.pos
-                snippet = (
-                    review_text[max(0, pos - 40): pos + 40] if pos > 0 else "N/A"
-                )
+                snippet = review_text[max(0, pos - 40) : pos + 40] if pos > 0 else "N/A"
                 errors.append(
                     f"REVIEW: JSON is invalid — {exc}. Position {pos} context: "
                     f"'{snippet}'. Review output may be truncated or malformed."
                 )
     else:
-        errors.append("REVIEW: No review report produced at all — Reviewer may have failed silently.")
+        errors.append(
+            "REVIEW: No review report produced at all — Reviewer may have failed silently."
+        )
 
     return errors
 
@@ -545,7 +545,9 @@ def _validate_coding_solutions(
         def _safe_import(name, *args, **kwargs):
             if name in _allowed_modules:
                 return _allowed_modules[name]
-            raise ImportError(f"Import '{name}' is not allowed in coding problem validation")
+            raise ImportError(
+                f"Import '{name}' is not allowed in coding problem validation"
+            )
 
         safe_namespace: dict = {
             "__builtins__": {
@@ -559,6 +561,8 @@ def _validate_coding_solutions(
                 "str": str,
                 "float": float,
                 "bool": bool,
+                "chr": chr,
+                "ord": ord,
                 "min": min,
                 "max": max,
                 "sum": sum,
@@ -606,9 +610,7 @@ def _validate_coding_solutions(
             for ex_i, example in enumerate(examples):
                 if not isinstance(example, dict):
                     continue
-                err = _check_one_case(
-                    fn, fn_name, example, pid, f"Example {ex_i + 1}"
-                )
+                err = _check_one_case(fn, fn_name, example, pid, f"Example {ex_i + 1}")
                 if err:
                     mismatches.append(err)
 
@@ -618,9 +620,7 @@ def _validate_coding_solutions(
             for tc_i, tc in enumerate(test_cases):
                 if not isinstance(tc, dict):
                     continue
-                err = _check_one_case(
-                    fn, fn_name, tc, pid, f"Test case {tc_i + 1}"
-                )
+                err = _check_one_case(fn, fn_name, tc, pid, f"Test case {tc_i + 1}")
                 if err:
                     mismatches.append(err)
 
@@ -647,14 +647,14 @@ def _check_one_case(
     import inspect as _inspect
 
     input_str = case.get("input", "")
-    expected_str = case.get("expected", "")
+    expected_str = case.get("expected") or case.get("output", "")
     if not input_str:
         return None
 
     # ── Parse expected value ───────────────────────────────────────────
     try:
         expected_val = _ast.literal_eval(expected_str)
-    except (ValueError, SyntaxError):
+    except ValueError, SyntaxError:
         expected_val = expected_str
 
     # ── Parse inputs into a local namespace ────────────────────────────
@@ -692,7 +692,7 @@ def _check_one_case(
     if not local_ns:
         try:
             bare_val = _ast.literal_eval(input_str.strip())
-        except (ValueError, SyntaxError):
+        except ValueError, SyntaxError:
             # Last resort: exec as expression
             try:
                 bare_val = eval(input_str.strip(), {}, {})  # noqa: S307 — restricted
@@ -723,9 +723,7 @@ def _check_one_case(
             # Fewer vars than params — pass what we have positionally
             actual = fn(*list(local_ns.values()))
     except Exception as exc:
-        return (
-            f"{problem_id} {case_label}: Solution raised {type(exc).__name__}: {exc}"
-        )
+        return f"{problem_id} {case_label}: Solution raised {type(exc).__name__}: {exc}"
 
     # ── Compare ───────────────────────────────────────────────────────
     if actual != expected_val:
@@ -807,9 +805,7 @@ def _produce_topic(
 
     if topic:
         label = label or topic["label"]
-        difficulties = difficulties or ",".join(
-            topic.get("difficulties", ["beginner"])
-        )
+        difficulties = difficulties or ",".join(topic.get("difficulties", ["beginner"]))
         content_types = content_types or ",".join(
             topic.get("content_types", ["article"])
         )
@@ -906,7 +902,9 @@ def _produce_topic(
     if num_coding > 0 and task_outputs.get("coding_problems"):
         solution_errors = _validate_coding_solutions(task_outputs["coding_problems"])
         if solution_errors:
-            print(f"\n[SOLUTION] Solution vs test case validation found {len(solution_errors)} issue(s):")
+            print(
+                f"\n[SOLUTION] Solution vs test case validation found {len(solution_errors)} issue(s):"
+            )
             for err in solution_errors:
                 print(f"   [MISMATCH] {err}")
             print(
@@ -937,7 +935,8 @@ def _produce_topic(
     if task_outputs["review_report"]:
         review_raw = task_outputs["review_report"]
         try:
-            review_json = json.loads(_strip_double_braces(review_raw))
+            review_clean = _strip_double_braces(_strip_code_fences(review_raw))
+            review_json = json.loads(review_clean)
             verdict = review_json.get("verdict", "")
             if verdict == "approved":
                 coverage_increment = 1.0
@@ -965,7 +964,8 @@ def _produce_topic(
 
     if task_outputs["review_report"]:
         try:
-            review = json.loads(_strip_double_braces(task_outputs["review_report"]))
+            review_raw_clean = _strip_code_fences(task_outputs["review_report"])
+            review = json.loads(_strip_double_braces(review_raw_clean))
             print(f"\n[VERDICT] {review.get('verdict', 'unknown').upper()}")
             fixes = review.get("required_fixes", [])
             if fixes:
@@ -1025,9 +1025,13 @@ def _scan_content_output(topic_id: str) -> dict | None:
     review_raw = data.get("review_report", "")
     if review_raw:
         try:
-            review = json.loads(_strip_double_braces(review_raw)) if isinstance(review_raw, str) else review_raw
+            review = (
+                json.loads(_strip_double_braces(review_raw))
+                if isinstance(review_raw, str)
+                else review_raw
+            )
             verdict = review.get("verdict", "unknown")
-        except (json.JSONDecodeError, TypeError):
+        except json.JSONDecodeError, TypeError:
             pass
 
     return {
@@ -1069,12 +1073,18 @@ def cmd_gap() -> None:
 
         # ── Missing ───────────────────────────────────────────────────
         if coverage_pct == 0.0 or content_meta is None:
-            completely_missing.append({
-                "topic_id": tid,
-                "label": label,
-                "weight": weight,
-                "urgency": "CRITICAL" if weight >= 9 else "HIGH" if weight >= 7 else "MEDIUM",
-            })
+            completely_missing.append(
+                {
+                    "topic_id": tid,
+                    "label": label,
+                    "weight": weight,
+                    "urgency": "CRITICAL"
+                    if weight >= 9
+                    else "HIGH"
+                    if weight >= 7
+                    else "MEDIUM",
+                }
+            )
             continue
 
         # ── Staleness check ───────────────────────────────────────────
@@ -1086,18 +1096,20 @@ def cmd_gap() -> None:
                 gen_dt = datetime.fromisoformat(generated_at)
                 age_days = (now - gen_dt).days
                 is_stale = age_days > 365
-            except (ValueError, OverflowError):
+            except ValueError, OverflowError:
                 pass
 
         if is_stale:
-            stale_content.append({
-                "topic_id": tid,
-                "label": label,
-                "last_updated": generated_at,
-                "age_days": age_days,
-                "reason_stale": f"Content is {age_days} days old (>365 day threshold).",
-                "suggested_action": "Regenerate to incorporate latest interview patterns and company trends.",
-            })
+            stale_content.append(
+                {
+                    "topic_id": tid,
+                    "label": label,
+                    "last_updated": generated_at,
+                    "age_days": age_days,
+                    "reason_stale": f"Content is {age_days} days old (>365 day threshold).",
+                    "suggested_action": "Regenerate to incorporate latest interview patterns and company trends.",
+                }
+            )
 
         # ── Completeness check ────────────────────────────────────────
         found_types = set(content_meta.get("content_types_found", []))
@@ -1113,17 +1125,19 @@ def cmd_gap() -> None:
         if completeness_score >= 0.85 and coverage_pct >= 0.85:
             fully_covered.append(tid)
         else:
-            partial_coverage.append({
-                "topic_id": tid,
-                "label": label,
-                "coverage_pct": coverage_pct,
-                "missing_content_types": missing_types,
-                "missing_subtopics_estimate": missing_subtopics_estimate,
-                "missing_difficulty_levels": [],
-                "verdict": content_meta.get("verdict", "unknown"),
-                "needs_rewrite": content_meta.get("verdict") == "rejected",
-                "last_updated": generated_at or None,
-            })
+            partial_coverage.append(
+                {
+                    "topic_id": tid,
+                    "label": label,
+                    "coverage_pct": coverage_pct,
+                    "missing_content_types": missing_types,
+                    "missing_subtopics_estimate": missing_subtopics_estimate,
+                    "missing_difficulty_levels": [],
+                    "verdict": content_meta.get("verdict", "unknown"),
+                    "needs_rewrite": content_meta.get("verdict") == "rejected",
+                    "last_updated": generated_at or None,
+                }
+            )
 
     # ── Compute overall coverage ───────────────────────────────────────
     total = len(taxonomy_topics)
@@ -1151,7 +1165,9 @@ def cmd_gap() -> None:
 
     # Print summary
     s = report["summary"]
-    print(f"\n[DATA] Overall Coverage: {overall_pct}% ({covered_count}/{total} topics have content)")
+    print(
+        f"\n[DATA] Overall Coverage: {overall_pct}% ({covered_count}/{total} topics have content)"
+    )
     print(f"   [DONE] Fully Covered:    {s['fully_covered']}")
     print(f"   [WARN] Partial Coverage:  {s['partial_coverage']}")
     print(f"   [ERR]  Completely Missing: {s['completely_missing']}")
@@ -1159,9 +1175,13 @@ def cmd_gap() -> None:
 
     if completely_missing:
         print(f"\n[ERR] Top 10 missing topics by weight:")
-        missing_sorted = sorted(completely_missing, key=lambda t: t["weight"], reverse=True)[:10]
+        missing_sorted = sorted(
+            completely_missing, key=lambda t: t["weight"], reverse=True
+        )[:10]
         for t in missing_sorted:
-            print(f"   [{t['urgency']}] {t['label']} ({t['topic_id']}) — weight {t['weight']}")
+            print(
+                f"   [{t['urgency']}] {t['label']} ({t['topic_id']}) — weight {t['weight']}"
+            )
 
     if partial_coverage:
         needs_rewrite = [t for t in partial_coverage if t.get("needs_rewrite")]
@@ -1169,11 +1189,15 @@ def cmd_gap() -> None:
         if needs_rewrite:
             print(f"\n[WARN] Topics needing rewrite (reviewer rejected):")
             for t in needs_rewrite:
-                print(f"   - {t['label']} ({t['topic_id']}) — coverage {t['coverage_pct']:.0%}")
+                print(
+                    f"   - {t['label']} ({t['topic_id']}) — coverage {t['coverage_pct']:.0%}"
+                )
         if missing_types:
             print(f"\n[WARN] Topics missing content types:")
             for t in missing_types:
-                print(f"   - {t['label']} ({t['topic_id']}) — missing: {t['missing_content_types']}")
+                print(
+                    f"   - {t['label']} ({t['topic_id']}) — missing: {t['missing_content_types']}"
+                )
 
 
 def cmd_interactive() -> None:
