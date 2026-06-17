@@ -159,7 +159,7 @@ Validation errors are printed but don't block the combined save — they surface
 
 **Code fence parsing in verdict/coverage paths:** The Reviewer wraps its output in ` ```json ... ``` ` fences. Both verdict-reading code paths (coverage increment at ~line 938 and verdict print at ~line 968) must chain `_strip_code_fences()` then `_strip_double_braces()` before `json.loads()`. The `_validate_task_outputs()` path at line 375 already chains them correctly. Run 19 revealed both verdict paths were missing `_strip_code_fences()`, causing silent JSON parse failures that masked the Reviewer's `rejected` verdict (fell to `except → coverage_increment = 0.25`, but `max(old_0.85, 0.25) = 0.85` hid it). Fixed by adding `_strip_code_fences()` to both paths.
 
-### Fix-cycle: automated solution validation
+### Fix-cycle: automated solution validation + auto-correction
 
 `_validate_coding_solutions()` in `main.py` runs every coding problem's solution code against its own test cases:
 
@@ -167,13 +167,15 @@ Validation errors are printed but don't block the combined save — they surface
 2. Finds the function name via a balanced-paren signature scanner
 3. Executes the code in a **sandboxed namespace** with 22 restricted builtins (`len`, `range`, `list`, `dict`, `set`, `tuple`, `int`, `str`, `float`, `bool`, `chr`, `ord`, `min`, `max`, `sum`, `abs`, `sorted`, `enumerate`, `zip`, `map`, `filter`, `reversed`, `any`, `all`, `True`, `False`, `None`, `print`, `isinstance`, + exception types) and a whitelist of 5 stdlib modules (`collections`, `math`, `heapq`, `itertools`, `functools`) accessed via a custom `__import__` hook
 4. Runs each test case's input through the solution and compares output to the expected value
-5. Returns list of MISMATCH messages
+5. Returns `(mismatches: list[str], corrected_json: str | None)`
 
-**Key detail — `"output"` vs `"expected"` key handling:** The Coding agent uses `"output"` for examples but `"expected"` for test_cases. The validator uses `case.get("expected") or case.get("output", "")` as a defensive fallback (line 650). Without this, 7/9 mismatches in run 17 were false positives.
+**Auto-fix mode (`fix=True`, enabled by default in the pipeline):** When a mismatch is found, the function corrects the `expected`/`output` value in the parsed problem dict to match what the solution code ACTUALLY produces (using `json.dumps(actual)`). The corrected JSON string is returned as the second tuple element, and the pipeline re-saves the individual coding file AND uses the corrected version in the combined output that the Reviewer sees.
 
-Input parsing supports three formats: bare literals (`"[3,7,1,9,4]"` → single positional arg), newline-separated assignments, and comma-separated assignments (via `_split_assignments()` state-machine parser respecting brackets/parens/quotes). Argument mapping uses `inspect.signature()` with positional fallback when input var names don't match param names.
+This eliminates the #1 pipeline rejection cause: the Coding agent cannot execute code — it can only simulate execution — so it invents wrong expected outputs that its own solution doesn't produce. No amount of prompt engineering can fix this; only actual Python execution can.
 
-This catches the #1 rejection cause: the Coding agent invents expected outputs that its own solution code doesn't produce.
+**Key detail — `"output"` vs `"expected"` key handling:** The Coding agent uses `"output"` for examples but `"expected"` for test_cases. The validator uses `case.get("expected") or case.get("output", "")` as a defensive fallback. Auto-fix preserves whichever key was found — if the case dict has `"expected"`, it updates that; otherwise it updates `"output"`.
+
+**`_check_one_case` return signature:** Returns `(error_or_None, actual_value)`. The second element is the function's actual return value on mismatch, or `_NO_VALUE` sentinel when the case couldn't be executed (parse error, compile error, etc.). This enables the caller to auto-correct without re-executing.
 
 ### LLM configuration (`content_agents.py`, `topic_strategist.py`)
 

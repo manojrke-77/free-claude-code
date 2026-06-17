@@ -448,29 +448,35 @@ def _strip_double_braces(text: str) -> str:
 
 def _validate_coding_solutions(
     coding_raw: str | None,
-) -> list[str]:
+    *,
+    fix: bool = False,
+) -> tuple[list[str], str | None]:
     """Run every coding problem's solution against its test cases and examples.
 
     Extracts the optimal solution code from each problem, parses the function
-    signature, then executes it against every test case input. Returns a list
-    of mismatch messages (empty = all outputs match solution code).
+    signature, then executes it against every test case input. Returns
+    ``(mismatches, corrected_json_or_None)``.
 
-    This catches the #1 remaining rejection cause: the Coding agent writes a
-    solution, then invents expected outputs that the solution doesn't produce.
+    When *fix* is True and mismatches are found, the function corrects the
+    expected/output values in the parsed problem dicts to match what the
+    solution code ACTUALLY produces, then returns the corrected JSON string.
+    This eliminates the #1 pipeline rejection cause: the Coding agent invents
+    wrong expected outputs that its own solution doesn't produce.
     """
     if not coding_raw:
-        return []
+        return [], None
 
     coding_text = _strip_code_fences(coding_raw)
     try:
         problems = json.loads(coding_text)
     except json.JSONDecodeError as exc:
-        return [f"CODING SOLUTIONS: Cannot parse coding JSON — {exc}"]
+        return [f"CODING SOLUTIONS: Cannot parse coding JSON — {exc}"], None
 
     if not isinstance(problems, list):
-        return []
+        return [], None
 
     mismatches: list[str] = []
+    fixes_applied = 0
 
     for prob_index, problem in enumerate(problems):
         if not isinstance(problem, dict):
@@ -604,27 +610,56 @@ def _validate_coding_solutions(
             )
             continue
 
-        # ── Validate examples ─────────────────────────────────────────
+        # ── Validate (and optionally fix) examples ────────────────────
         examples = problem.get("examples", [])
         if isinstance(examples, list):
             for ex_i, example in enumerate(examples):
                 if not isinstance(example, dict):
                     continue
-                err = _check_one_case(fn, fn_name, example, pid, f"Example {ex_i + 1}")
+                err, actual = _check_one_case(
+                    fn, fn_name, example, pid, f"Example {ex_i + 1}"
+                )
                 if err:
                     mismatches.append(err)
+                    if fix and actual is not _NO_VALUE:
+                        key = "expected" if "expected" in example else "output"
+                        old = example.get(key, "")
+                        example[key] = json.dumps(actual)
+                        fixes_applied += 1
+                        mismatches.append(
+                            f"  └─ [AUTO-FIXED] {key}: {old!r} → {example[key]!r}"
+                        )
 
-        # ── Validate test cases ───────────────────────────────────────
+        # ── Validate (and optionally fix) test cases ──────────────────
         test_cases = problem.get("test_cases", [])
         if isinstance(test_cases, list):
             for tc_i, tc in enumerate(test_cases):
                 if not isinstance(tc, dict):
                     continue
-                err = _check_one_case(fn, fn_name, tc, pid, f"Test case {tc_i + 1}")
+                err, actual = _check_one_case(
+                    fn, fn_name, tc, pid, f"Test case {tc_i + 1}"
+                )
                 if err:
                     mismatches.append(err)
+                    if fix and actual is not _NO_VALUE:
+                        key = "expected" if "expected" in tc else "output"
+                        old = tc.get(key, "")
+                        tc[key] = json.dumps(actual)
+                        fixes_applied += 1
+                        mismatches.append(
+                            f"  └─ [AUTO-FIXED] {key}: {old!r} → {tc[key]!r}"
+                        )
 
-    return mismatches
+    corrected_json: str | None = None
+    if fix and fixes_applied > 0:
+        corrected_json = json.dumps(problems, indent=2, ensure_ascii=False)
+
+    return mismatches, corrected_json
+
+
+_NO_VALUE = (
+    object()
+)  # sentinel: no actual value computed (parse error, compile error, etc.)
 
 
 def _check_one_case(
@@ -633,7 +668,7 @@ def _check_one_case(
     case: dict,
     problem_id: str,
     case_label: str,
-) -> str | None:
+) -> tuple[str | None, object]:
     """Execute one test case against the solution function.
 
     Supports these input formats:
@@ -641,7 +676,9 @@ def _check_one_case(
     - ``"stalls = [1,2,3]\\nk = 2"`` — newline-separated assignments
     - ``"stalls = [1,2,3], k = 2"`` — comma-separated assignments on one line
 
-    Returns an error message on mismatch, or None if the output matches.
+    Returns ``(error_message_or_None, actual_computed_value)``.  The second
+    element is ``_NO_VALUE`` when the case could not be executed at all
+    (parse error, compile error, etc.), otherwise the function's return value.
     """
     import ast as _ast
     import inspect as _inspect
@@ -649,7 +686,7 @@ def _check_one_case(
     input_str = case.get("input", "")
     expected_str = case.get("expected") or case.get("output", "")
     if not input_str:
-        return None
+        return None, _NO_VALUE
 
     # ── Parse expected value ───────────────────────────────────────────
     try:
@@ -700,7 +737,7 @@ def _check_one_case(
                 return (
                     f"{problem_id} {case_label}: Cannot parse input — {exc}. "
                     f"Input: '{input_str[:80]}'"
-                )
+                ), _NO_VALUE
         local_ns = {"__arg__": bare_val}
 
     # ── Call the function ──────────────────────────────────────────────
@@ -723,7 +760,10 @@ def _check_one_case(
             # Fewer vars than params — pass what we have positionally
             actual = fn(*list(local_ns.values()))
     except Exception as exc:
-        return f"{problem_id} {case_label}: Solution raised {type(exc).__name__}: {exc}"
+        return (
+            f"{problem_id} {case_label}: Solution raised {type(exc).__name__}: {exc}",
+            _NO_VALUE,
+        )
 
     # ── Compare ───────────────────────────────────────────────────────
     if actual != expected_val:
@@ -731,9 +771,9 @@ def _check_one_case(
             f"{problem_id} {case_label}: MISMATCH — "
             f"got {repr(actual)}, expected {expected_str!r}. "
             f"Input: {input_str[:100]}"
-        )
+        ), actual
 
-    return None
+    return None, _NO_VALUE
 
 
 def _split_assignments(line: str) -> list[str]:
@@ -900,19 +940,40 @@ def _produce_topic(
 
     # ── Validate coding solutions against test cases ───────────────────────
     if num_coding > 0 and task_outputs.get("coding_problems"):
-        solution_errors = _validate_coding_solutions(task_outputs["coding_problems"])
+        solution_errors, corrected_coding = _validate_coding_solutions(
+            task_outputs["coding_problems"], fix=True
+        )
         if solution_errors:
+            # Count actual errors (not auto-fix confirmation lines)
+            actual_errors = [e for e in solution_errors if not e.startswith("  └─")]
+            auto_fixes = [e for e in solution_errors if e.startswith("  └─")]
             print(
-                f"\n[SOLUTION] Solution vs test case validation found {len(solution_errors)} issue(s):"
+                f"\n[SOLUTION] Solution vs test case validation found "
+                f"{len(actual_errors)} issue(s):"
             )
-            for err in solution_errors:
+            for err in actual_errors:
                 print(f"   [MISMATCH] {err}")
-            print(
-                "   [SOLUTION] These test cases have WRONG expected outputs. "
-                "The solution code produces a different result than what's claimed."
-            )
+            if auto_fixes:
+                print(
+                    f"   [AUTO-FIXED] Corrected {len(auto_fixes)} expected "
+                    f"value(s) to match the solution code's actual output."
+                )
+            else:
+                print(
+                    "   [SOLUTION] These test cases have WRONG expected outputs "
+                    "and could not be auto-corrected."
+                )
         else:
             print("\n[SOLUTION] All test cases match solution output — no mismatches.")
+
+        if corrected_coding:
+            task_outputs["coding_problems"] = corrected_coding
+            # Re-save the corrected individual file
+            _save_task_output(topic_dir, "coding_problems", corrected_coding, timestamp)
+            print(
+                "   [AUTO-FIXED] Coding problems JSON updated with corrected "
+                "expected values."
+            )
 
     # ── Save combined output ──────────────────────────────────────────────
     combined = {

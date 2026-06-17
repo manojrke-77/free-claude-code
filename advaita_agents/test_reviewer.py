@@ -37,7 +37,8 @@ from crewai import Agent, Crew, LLM, Process, Task
 
 TOPIC_ID = "ds_arrays"
 TOPIC_LABEL = "Arrays & Strings"
-COMBINED_PATH = Path(f"../content_output/{TOPIC_ID}/combined_20260616_152819.json")
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+COMBINED_PATH = _PROJECT_ROOT / f"content_output/{TOPIC_ID}/combined_20260617_041928.json"
 
 # ═══════════════════════════════════════════════════════════════════════
 #  Load existing content

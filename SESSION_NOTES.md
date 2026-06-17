@@ -119,3 +119,71 @@ After ds_arrays reaches `approved`, move to next topic from `roadmap_scored.json
 - `content_output/ds_arrays/` — run 17 (152819), run 19 (162528) output files
 - `published_index.json` — `ds_arrays: 0.85`
 - `CLAUDE.md` / `AGENTS.md` — full documentation synced
+
+---
+
+## Run 20 — Guardrail improvements + content fixes (2026-06-17)
+
+### Guardrails added to `content_tasks.py`
+
+**Quiz task:**
+- **CHECK 4 — OPTION-VALUE MATCH**: After computing the correct answer numerically, verify the exact value appears in the option text. Prevents self-contradictions where explanation computes 19 but option says 18.
+- **DISTRACTOR DISTINCTNESS**: Every distractor must describe a DIFFERENT outcome. Two options with identical outcomes (even for different reasons) reduce the question to 3-option.
+
+**Coding task:**
+- **NO DUPLICATE DRAFT EXAMPLES**: Each example must appear exactly ONCE. Draft versions with inline corrections must be deleted before submission.
+- **DIFFERENCE ARRAY CORRECTNESS**: Diff array has size n+1, so `diff[r+1] -= v` is always safe for r <= n-1. Don't guard with `if r + 1 < n`.
+- **TEST CASE VERIFICATION** strengthened: Explicitly mentions difference-array reconstruction, sliding-window enumeration, and manual recomputation from scratch.
+
+### Run 20 results
+
+- **Verdict**: `approved_with_minor_fixes` (improved from run 19's `rejected`)
+- **Quiz**: Clean — no CRITICAL MCQ bugs. All correct answers match options. Distractor quality: 8/10, Explanations: 9/10.
+- **Coding**: Still had same bug classes despite stronger guardrails:
+  1. cp_ds_arrays_2 test case 4: expected=4 should be 6 (prefix-sum subarray count)
+  2. cp_ds_arrays_3: Duplicate draft example with inline self-correction
+  3. cp_ds_arrays_3: Example claims [3,2,1] has ≤2 distinct types (it has 3)
+- **Automated validator** caught both mismatches (fixed before Reviewer run)
+
+### Content fixes applied (manual post-generation)
+
+All 5 CRITICAL + MODERATE fixes from Reviewer's list applied to individual output files:
+1. cp_ds_arrays_2 test case 4: expected "4" → "6"
+2. cp_ds_arrays_3 examples: Removed duplicate draft example, fixed [3,2,1] reference
+3. Article: Removed "wait, verify:" self-correction comment in subarray_sum_equals_k
+4. Quiz q_ds_arrays_7: Fixed distractor C contradiction (4+2+5=11, not 9)
+
+### test_reviewer.py verified fixed content
+
+- Ran isolated Reviewer against fixed content → `approved_with_minor_fixes`
+- 5 remaining fixes all MINOR (pedagogical clarifications, missing subtopic bullet, variable name consistency)
+- No CRITICAL or HIGH issues remain
+
+### Key insight: Coding agent cannot reliably verify its own output
+
+The same bug class (wrong test case expected values, duplicate draft examples) persists across runs 19 and 20 despite progressively stronger guardrails. The LLM fundamentally cannot execute its own code mentally and verify outputs. The automated validator `_validate_coding_solutions()` catches wrong expected values post-hoc, but there's no auto-fix mechanism.
+
+**Future improvement**: Consider running `_validate_coding_solutions()` as a pre-Reviewer step and auto-correcting mismatched expected values, or adding a "test case auto-fix" pass before the Reviewer runs.
+
+### State
+- `published_index.json`: `{"ds_arrays": 0.85}` (approved_with_minor_fixes)
+- Remaining fixes are all minor/pedagogical — content is publication-ready at 0.85
+
+### Files changed this session
+
+| File | Change | Why |
+|------|--------|-----|
+| `advaita_agents/tasks/content_tasks.py` | +4 Quiz guardrails (CHECK 4, DISTRACTOR DISTINCTNESS) | Prevent MCQ correct-answer-not-in-options bug from run 19 |
+| `advaita_agents/tasks/content_tasks.py` | +3 Coding guardrails (no duplicate examples, diff array, stronger test verification) | Prevent draft artifacts + wrong expected outputs |
+| `content_output/ds_arrays/quiz_content_20260616_162528.json` | Fixed q_ds_arrays_5 option B (18→19), q_ds_arrays_4 distractor D, q_ds_arrays_8 option C | Run 19 content fixes (safety net) |
+| `content_output/ds_arrays/coding_problems_20260616_162528.json` | Removed duplicate example, fixed test case 4, fixed diff array code | Run 19 content fixes |
+| `content_output/ds_arrays/article_content_20260616_162528.json` | Fixed "reportedlycommon" typo | Run 19 content fix |
+| `content_output/ds_arrays/coding_problems_20260617_041928.json` | Fixed test case 4 (4→6), removed duplicate example | Run 20 content fixes |
+| `content_output/ds_arrays/article_content_20260617_041928.json` | Removed "wait, verify:" self-correction comment | Run 20 content fix |
+| `content_output/ds_arrays/quiz_content_20260617_041928.json` | Fixed q_ds_arrays_7 distractor C contradiction | Run 20 content fix |
+| `advaita_agents/test_reviewer.py` | Fixed COMBINED_PATH to use absolute path from script dir | Bug fix — relative path resolved from wrong cwd |
+
+### Next steps
+
+1. **Move to next topic** from `roadmap_scored.json` (ds_arrays is at 0.85, acceptable for now)
+2. **Coding agent auto-fix**: Consider running `_validate_coding_solutions()` as a pre-Reviewer step that auto-corrects expected values in the coding JSON before the Reviewer sees it
