@@ -1,0 +1,275 @@
+[
+  {
+    "id": "cp_ds_arrays_1",
+    "title": "Warehouse Inventory Balance",
+    "difficulty": "easy",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA warehouse manager records daily stock counts in an array. She wants to find the **pivot day** — the index where the total stock before that day equals the total stock after that day.\n\nGiven a 0-indexed integer array `stock` of length `n`, return the **leftmost pivot index** such that the sum of all elements to its left equals the sum of all elements to its right. Elements at the pivot index itself are not included in either sum. If no such index exists, return `-1`.\n\n### Function Signature\n```python\ndef find_pivot(stock: list[int]) -> int:\n```",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": -1000,
+      "value_max": 1000,
+      "note": "Array may contain negative values. Return the leftmost pivot if multiple exist."
+    },
+    "examples": [
+      {
+        "input": "stock = [1, 7, 3, 6, 5, 6]",
+        "output": "3",
+        "explanation": "Left sum at index 3 = 1+7+3 = 11; right sum = 5+6 = 11. They are equal, so index 3 is the pivot."
+      },
+      {
+        "input": "stock = [2, 1, -1]",
+        "output": "0",
+        "explanation": "Left sum at index 0 = 0 (nothing to the left); right sum = 1+(-1) = 0. They are equal, so index 0 is the pivot."
+      },
+      {
+        "input": "stock = [1, 2, 3]",
+        "output": "-1",
+        "explanation": "No index satisfies the condition, so return -1."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For each index i, compute the sum of all elements to its left and all elements to its right separately using slices, then compare. This is O(n) per index, giving O(n²) total.",
+        "code": "def find_pivot(stock):\n    n = len(stock)\n    for i in range(n):\n        left_sum = sum(stock[:i])       # sum of elements before i\n        right_sum = sum(stock[i+1:])    # sum of elements after i\n        if left_sum == right_sum:\n            return i\n    return -1",
+        "time": "O(n²)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Compute the total sum once. As we iterate through each index, maintain a running left_sum. The right sum at index i equals total - left_sum - stock[i]. If left_sum equals the right sum, we found our pivot. Update left_sum and continue.",
+        "code": "def find_pivot(stock):\n    total = sum(stock)   # total sum of entire array\n    left_sum = 0\n    for i in range(len(stock)):\n        # right_sum = total - left_sum - stock[i]\n        if left_sum == total - left_sum - stock[i]:\n            return i\n        left_sum += stock[i]  # include stock[i] in left sum for next iteration\n    return -1",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "stock = [1, 7, 3, 6, 5, 6]",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [2, 1, -1]",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [1, 2, 3]",
+        "expected": "-1",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [5]",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [-1, -1, -1, 0, 1, 1]",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [0, 0, 0, 0]",
+        "expected": "0",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "Infosys",
+      "TCS"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Hint 1: For each index, you need both a left sum and a right sum. Can you compute one of them without a separate loop?",
+      "Hint 2: If you know the total sum of the array and the running left sum, can you derive the right sum in O(1)?",
+      "Hint 3: right_sum = total - left_sum - stock[i]. Check if left_sum equals right_sum before adding stock[i] to left_sum."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_2",
+    "title": "Festival Crowd Windows",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA festival organizer monitors crowd density per zone. She records the crowd count for each zone in an array `crowd`. She wants to find the **minimum length** of a contiguous zone range (subarray) whose crowd total is **at least** `threshold`. This helps identify the smallest section to deploy additional security staff.\n\nGiven an array `crowd` of positive integers and an integer `threshold`, return the **minimum length** of a subarray with sum ≥ `threshold`. If no such subarray exists, return `0`.\n\n### Function Signature\n```python\ndef min_zone_length(crowd: list[int], threshold: int) -> int:\n```",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": 1,
+      "value_max": 10000,
+      "threshold_min": 1,
+      "threshold_max": 1000000000,
+      "note": "All elements in crowd are strictly positive integers. Return 0 if no valid subarray exists."
+    },
+    "examples": [
+      {
+        "input": "crowd = [2, 3, 1, 2, 4, 3], threshold = 7",
+        "output": "2",
+        "explanation": "The subarray [4, 3] has sum 7 ≥ 7 and length 2, which is the minimum possible."
+      },
+      {
+        "input": "crowd = [1, 4, 4], threshold = 8",
+        "output": "2",
+        "explanation": "The subarray [4, 4] has sum 8 ≥ 8 and length 2."
+      },
+      {
+        "input": "crowd = [1, 1, 1, 1], threshold = 10",
+        "output": "0",
+        "explanation": "Total sum is only 4 which is less than 10, so no valid subarray exists."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check every possible subarray using nested loops. For each starting index, expand rightward accumulating the sum until it meets the threshold or we run out of elements. Track the minimum length found. This is O(n²) and will time out for large inputs.",
+        "code": "def min_zone_length(crowd, threshold):\n    n = len(crowd)\n    min_len = float('inf')\n    for i in range(n):\n        curr_sum = 0\n        for j in range(i, n):\n            curr_sum += crowd[j]\n            if curr_sum >= threshold:\n                min_len = min(min_len, j - i + 1)\n                break  # no need to extend further from i\n    return 0 if min_len == float('inf') else min_len",
+        "time": "O(n²)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Use a variable sliding window. Since all elements are positive, expanding the right pointer increases the sum and shrinking the left pointer decreases it. Expand right until sum ≥ threshold, then shrink left as long as the condition still holds, recording the window length each time. This single pass is O(n).",
+        "code": "def min_zone_length(crowd, threshold):\n    n = len(crowd)\n    left = 0\n    curr_sum = 0\n    min_len = float('inf')\n\n    for right in range(n):\n        curr_sum += crowd[right]          # expand window to the right\n\n        # shrink from left while sum still meets threshold\n        while curr_sum >= threshold:\n            min_len = min(min_len, right - left + 1)\n            curr_sum -= crowd[left]       # remove leftmost element\n            left += 1                     # shrink window\n\n    return 0 if min_len == float('inf') else min_len",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "crowd = [2, 3, 1, 2, 4, 3], threshold = 7",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "crowd = [1, 4, 4], threshold = 8",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "crowd = [1, 1, 1, 1], threshold = 10",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "crowd = [10], threshold = 10",
+        "expected": "1",
+        "is_visible": false
+      },
+      {
+        "input": "crowd = [1, 2, 3, 4, 5], threshold = 15",
+        "expected": "5",
+        "is_visible": false
+      },
+      {
+        "input": "crowd = [5, 1, 3, 5, 10, 7, 4, 9, 2, 8], threshold = 15",
+        "expected": "2",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "Infosys",
+      "Google"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "Hint 1: Since all values are positive, adding more elements only increases the sum. This monotonic property is key — which technique exploits monotonicity on contiguous subarrays?",
+      "Hint 2: Try a sliding window. Expand the right boundary to grow the sum, then shrink the left boundary once the sum meets the threshold.",
+      "Hint 3: Inside a while loop, while curr_sum >= threshold: record the window length, subtract crowd[left], and increment left. This greedily finds the smallest valid window ending at each right index."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_3",
+    "title": "Signal Boost Subarrays",
+    "difficulty": "hard",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA telecom engineer studies signal strength readings stored in an integer array `signal`. She wants to count the number of contiguous subarrays whose sum is **exactly divisible by** a given integer `k`.\n\nGiven an integer array `signal` of length `n` (which may contain negative values) and a positive integer `k`, return the **count of contiguous subarrays** whose sum is divisible by `k`.\n\n### Function Signature\n```python\ndef count_divisible_subarrays(signal: list[int], k: int) -> int:\n```\n\n### Note on Modulo with Negatives\nIn Python, `(-3) % 5 == 2` (Python's modulo always returns a non-negative result when the divisor is positive). This means you can use `prefix_sum % k` directly without additional adjustment in Python.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 30000,
+      "value_min": -10000,
+      "value_max": 10000,
+      "k_min": 2,
+      "k_max": 10000,
+      "note": "Array may contain negative integers. k is always a positive integer."
+    },
+    "examples": [
+      {
+        "input": "signal = [4, 5, 0, -2, -3, 1], k = 5",
+        "output": "7",
+        "explanation": "The 7 subarrays with sum divisible by 5 are: [4,5,0,-2,-3,1] (sum=5), [5] (sum=5), [5,0,-2,-3] (sum=0), [0] (sum=0), [0,-2,-3] (sum=-5), [-2,-3] (sum=-5), and [4,5,0,-2,-3,1] — verified by counting all pairs of prefix indices with matching remainders mod 5."
+      },
+      {
+        "input": "signal = [5], k = 5",
+        "output": "1",
+        "explanation": "The only subarray is [5] with sum 5, which is divisible by 5."
+      },
+      {
+        "input": "signal = [1, 2, 3], k = 7",
+        "output": "0",
+        "explanation": "Possible subarray sums are 1, 2, 3, 3, 5, 6 — none divisible by 7."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Enumerate all O(n²) subarrays, compute each sum, and check divisibility. This is straightforward but too slow for large inputs.",
+        "code": "def count_divisible_subarrays(signal, k):\n    n = len(signal)\n    count = 0\n    for i in range(n):\n        curr_sum = 0\n        for j in range(i, n):\n            curr_sum += signal[j]\n            if curr_sum % k == 0:\n                count += 1\n    return count",
+        "time": "O(n²)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Use prefix sums with a remainder frequency map. If prefix[j] % k == prefix[i] % k, then the subarray signal[i+1..j] has sum divisible by k. We count pairs of prefix indices sharing the same remainder. Initialize the map with remainder 0 having count 1 (representing the empty prefix). Python's modulo handles negatives correctly (always non-negative when k > 0).",
+        "code": "def count_divisible_subarrays(signal, k):\n    remainder_count = {0: 1}  # prefix sum remainder -> frequency\n    prefix_sum = 0\n    count = 0\n\n    for val in signal:\n        prefix_sum += val\n        rem = prefix_sum % k   # Python handles negative values correctly\n\n        # Every previous prefix with same remainder forms a valid subarray\n        count += remainder_count.get(rem, 0)\n        remainder_count[rem] = remainder_count.get(rem, 0) + 1\n\n    return count",
+        "time": "O(n)",
+        "space": "O(k)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "signal = [4, 5, 0, -2, -3, 1], k = 5",
+        "expected": "7",
+        "is_visible": true
+      },
+      {
+        "input": "signal = [5], k = 5",
+        "expected": "1",
+        "is_visible": true
+      },
+      {
+        "input": "signal = [1, 2, 3], k = 7",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "signal = [0, 0, 0], k = 3",
+        "expected": "6",
+        "is_visible": false
+      },
+      {
+        "input": "signal = [-1, 2, 9, -3, 3], k = 3",
+        "expected": "6",
+        "is_visible": false
+      },
+      {
+        "input": "signal = [2, 2, 2, 2, 2], k = 2",
+        "expected": "15",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Google",
+      "Amazon",
+      "Microsoft"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "Hint 1: Brute force checks every subarray sum. Can you use prefix sums to avoid recomputing from scratch — and reformulate the divisibility condition as a property of two prefix sums?",
+      "Hint 2: A subarray signal[i+1..j] is divisible by k if and only if prefix[j] % k == prefix[i] % k. So count pairs of prefix indices sharing the same remainder.",
+      "Hint 3: Maintain a dictionary mapping each remainder to how many times it has appeared so far. For each new prefix sum remainder, add the count of previous occurrences of that same remainder to the answer, then increment its count. Seed the map with {0: 1} to account for subarrays starting at index 0."
+    ]
+  }
+]

@@ -1,0 +1,276 @@
+[
+  {
+    "id": "cp_ds_arrays_1",
+    "title": "Warehouse Stock Balancer",
+    "difficulty": "easy",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA warehouse manager tracks daily stock levels across `n` shelves. He wants to find the **equilibrium shelf** — the index where the sum of stock to its left equals the sum of stock to its right.\n\nGiven an integer array `stock` of length `n`, return the **leftmost index** `i` such that:\n- Sum of `stock[0..i-1]` equals sum of `stock[i+1..n-1]`\n\nIf no such index exists, return `-1`. The elements to the left of index `0` and to the right of index `n-1` are considered to have sum `0`.\n\n## Function Signature\n```python\ndef equilibrium_index(stock: list[int]) -> int:\n```\n\n## Input / Output\n- **Input**: A list of integers `stock`\n- **Output**: The leftmost equilibrium index, or `-1`",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": -10000,
+      "value_max": 10000,
+      "time_limit": "O(n)",
+      "note": "Array may contain negative values. Return the leftmost index if multiple equilibrium indices exist."
+    },
+    "examples": [
+      {
+        "input": "stock = [1, 7, 3, 6, 5, 6]",
+        "output": "3",
+        "explanation": "Left sum at index 3 = 1+7+3 = 11; right sum = 5+6 = 11. They are equal, so index 3 is the answer."
+      },
+      {
+        "input": "stock = [2, 1, -1]",
+        "output": "0",
+        "explanation": "Left sum at index 0 = 0 (no elements); right sum = 1 + (-1) = 0. Equal, so index 0 is equilibrium."
+      },
+      {
+        "input": "stock = [1, 2, 3]",
+        "output": "-1",
+        "explanation": "No index satisfies the condition, so return -1."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For each index i, compute the sum of all elements to its left and all elements to its right using two separate loops. Compare both sums. This requires O(n) work per index.",
+        "code": "def equilibrium_index(stock):\n    n = len(stock)\n    for i in range(n):\n        left_sum = sum(stock[:i])       # sum of elements before i\n        right_sum = sum(stock[i+1:])    # sum of elements after i\n        if left_sum == right_sum:\n            return i\n    return -1",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Compute the total sum once. Maintain a running left_sum as we traverse. At each index i, right_sum = total - left_sum - stock[i]. If left_sum equals right_sum, return i. Update left_sum by adding stock[i] before moving to next index.",
+        "code": "def equilibrium_index(stock):\n    total = sum(stock)   # compute total sum once\n    left_sum = 0\n    for i in range(len(stock)):\n        # right_sum = total - left_sum - stock[i]\n        if left_sum == total - left_sum - stock[i]:\n            return i\n        left_sum += stock[i]  # accumulate left sum\n    return -1",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "stock = [1, 7, 3, 6, 5, 6]",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [2, 1, -1]",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "stock = [1, 2, 3]",
+        "expected": "-1",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [5]",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [0, 0, 0, 0]",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "stock = [-7, 1, 5, 2, -4, 3, 0]",
+        "expected": "3",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "TCS",
+      "Infosys",
+      "Wipro",
+      "Amazon"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Can you avoid recomputing the left and right sums from scratch for every index?",
+      "Compute the total sum of the array once. Then as you move from left to right, maintain a running left_sum. The right_sum at index i can be derived from total, left_sum, and stock[i].",
+      "At each index i: right_sum = total - left_sum - stock[i]. If left_sum == right_sum, you found your answer. After checking, add stock[i] to left_sum before advancing."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_2",
+    "title": "Delivery Route Optimizer",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA logistics company tracks delivery distances as a sequence of integers. A delivery manager wants to identify the **longest contiguous route segment** where the number of **uphill stretches** (positive values) equals the number of **downhill stretches** (negative values). Zero-distance entries are ignored and do not count as either.\n\nGiven an integer array `distances` of length `n`, return the **length** of the longest contiguous subarray where the count of positive integers equals the count of negative integers. If no such subarray exists, return `0`.\n\n## Function Signature\n```python\ndef longest_balanced_route(distances: list[int]) -> int:\n```\n\n## Input / Output\n- **Input**: A list of integers `distances`\n- **Output**: An integer representing the length of the longest balanced subarray",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": -10000,
+      "value_max": 10000,
+      "time_limit": "O(n)",
+      "note": "Zeros do not contribute to either count. Multiple valid subarrays may exist; return the length of the longest."
+    },
+    "examples": [
+      {
+        "input": "distances = [1, -1, 2, 3, -2, -3, 4]",
+        "output": "6",
+        "explanation": "The subarray [1,-1,2,3,-2,-3] has 3 positives and 3 negatives, length 6. The full array has 4 positives and 3 negatives so it doesn't qualify."
+      },
+      {
+        "input": "distances = [1, 2, 3, 4]",
+        "output": "0",
+        "explanation": "All values are positive, so no subarray can have equal counts of positives and negatives."
+      },
+      {
+        "input": "distances = [0, 1, -1, 0]",
+        "output": "2",
+        "explanation": "Zeros are ignored. The subarray [1,-1] has 1 positive and 1 negative, giving length 2."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check all O(n^2) subarrays. For each subarray, count positives and negatives. Track the maximum length where counts are equal. This is straightforward but too slow for large inputs.",
+        "code": "def longest_balanced_route(distances):\n    n = len(distances)\n    max_len = 0\n    for i in range(n):\n        pos = neg = 0\n        for j in range(i, n):\n            if distances[j] > 0: pos += 1\n            elif distances[j] < 0: neg += 1\n            if pos == neg:\n                max_len = max(max_len, j - i + 1)\n    return max_len",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Transform the array: replace each positive with +1, each negative with -1, and each zero with 0. Now the problem reduces to finding the longest subarray with sum 0. Use a prefix sum with a hash map: store the first index where each prefix sum was seen. If the same prefix sum appears again at index i, the subarray between those indices has sum 0.",
+        "code": "def longest_balanced_route(distances):\n    # Transform: +1 for positive, -1 for negative, 0 for zero\n    transformed = []\n    for d in distances:\n        if d > 0: transformed.append(1)\n        elif d < 0: transformed.append(-1)\n        else: transformed.append(0)\n\n    first_seen = {0: -1}  # prefix_sum -> earliest index it occurred\n    prefix = 0\n    max_len = 0\n\n    for i, val in enumerate(transformed):\n        prefix += val\n        if prefix in first_seen:\n            # subarray from first_seen[prefix]+1 to i has sum 0\n            max_len = max(max_len, i - first_seen[prefix])\n        else:\n            first_seen[prefix] = i  # record first occurrence only\n\n    return max_len",
+        "time": "O(n)",
+        "space": "O(n)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "distances = [1, -1, 2, 3, -2, -3, 4]",
+        "expected": "6",
+        "is_visible": true
+      },
+      {
+        "input": "distances = [1, 2, 3, 4]",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "distances = [0, 1, -1, 0]",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "distances = [5]",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "distances = [-3, 3]",
+        "expected": "2",
+        "is_visible": false
+      },
+      {
+        "input": "distances = [1, -1, 1, -1, 1, -1]",
+        "expected": "6",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "Meta",
+      "Infosys"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "Think about transforming the array so that positives become +1 and negatives become -1. What does the problem ask for now?",
+      "After transformation, you need the longest subarray with sum equal to 0. This is a classic prefix sum problem.",
+      "Use a hash map storing the first index where each prefix sum was seen. If prefix sum P appears at indices i and j (i < j), then the subarray from i+1 to j has sum 0 and length j - i."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_3",
+    "title": "Sliding Menu Variety Score",
+    "difficulty": "hard",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA restaurant chain rotates menu items daily. Given a string `menu` of length `n` representing daily menu item codes (lowercase letters), and an integer `k`, find the length of the **longest substring** that contains **at most `k` distinct characters**.\n\nThis models finding the longest uninterrupted stretch of days where the total variety of items on the menu does not exceed `k` distinct types.\n\n## Function Signature\n```python\ndef longest_k_distinct(menu: str, k: int) -> int:\n```\n\n## Input / Output\n- **Input**: A string `menu` and an integer `k`\n- **Output**: Length of the longest substring with at most `k` distinct characters. Return `0` if `k == 0` or `menu` is empty.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "k_min": 0,
+      "k_max": 26,
+      "character_set": "lowercase English letters only",
+      "time_limit": "O(n)",
+      "note": "If k >= number of distinct characters in menu, the answer is len(menu)."
+    },
+    "examples": [
+      {
+        "input": "menu = \"eceba\", k = 2",
+        "output": "3",
+        "explanation": "The substring \"ece\" has 2 distinct characters and length 3; no longer substring with at most 2 distinct chars exists."
+      },
+      {
+        "input": "menu = \"aabbcc\", k = 1",
+        "output": "2",
+        "explanation": "The longest substrings with at most 1 distinct character are \"aa\", \"bb\", and \"cc\", each of length 2."
+      },
+      {
+        "input": "menu = \"abcde\", k = 0",
+        "output": "0",
+        "explanation": "k = 0 means no characters are allowed, so no valid substring exists."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check all O(n^2) substrings. For each, count distinct characters using a set. Track the maximum length of those with at most k distinct characters.",
+        "code": "def longest_k_distinct(menu, k):\n    if k == 0 or not menu:\n        return 0\n    n = len(menu)\n    max_len = 0\n    for i in range(n):\n        seen = set()\n        for j in range(i, n):\n            seen.add(menu[j])\n            if len(seen) <= k:\n                max_len = max(max_len, j - i + 1)\n            else:\n                break  # adding more chars only increases distinct count\n    return max_len",
+        "time": "O(n^2)",
+        "space": "O(k)"
+      },
+      "optimal": {
+        "approach": "Use a variable-size sliding window. Maintain a frequency map of characters in the current window. Expand the right pointer always; when the window has more than k distinct characters, advance the left pointer until the window is valid again. Track the maximum window size seen.",
+        "code": "from collections import defaultdict\n\ndef longest_k_distinct(menu, k):\n    if k == 0 or not menu:\n        return 0\n\n    freq = defaultdict(int)  # char -> count in current window\n    left = 0\n    max_len = 0\n\n    for right in range(len(menu)):\n        freq[menu[right]] += 1  # expand window to the right\n\n        # shrink from left until we have at most k distinct chars\n        while len(freq) > k:\n            freq[menu[left]] -= 1\n            if freq[menu[left]] == 0:\n                del freq[menu[left]]  # remove char with zero count\n            left += 1\n\n        max_len = max(max_len, right - left + 1)\n\n    return max_len",
+        "time": "O(n)",
+        "space": "O(k)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "menu = \"eceba\", k = 2",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "menu = \"aabbcc\", k = 1",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "menu = \"abcde\", k = 0",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "menu = \"aaaa\", k = 1",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "menu = \"abaccc\", k = 2",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "menu = \"z\", k = 3",
+        "expected": "1",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Google",
+      "Meta",
+      "Microsoft"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "A brute-force approach checks all substrings — can you avoid restarting from scratch each time the window grows by one character?",
+      "Use a sliding window: maintain a frequency map of characters in the current window. Expand right freely; only shrink from the left when the number of distinct characters exceeds k.",
+      "When shrinking, decrement the frequency of menu[left] and delete it from the map when its count reaches zero. The window is valid again when len(freq) <= k. Update max_len after every expansion."
+    ]
+  }
+]

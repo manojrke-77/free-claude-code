@@ -1,0 +1,222 @@
+[
+  {
+    "id": "q_ds_arrays_1",
+    "question": "What is the time complexity of accessing an element by index in a Python list?",
+    "options": [
+      "A) O(n)",
+      "B) O(log n)",
+      "C) O(1)",
+      "D) O(n log n)"
+    ],
+    "correct_index": 2,
+    "explanation": "Python lists are implemented as dynamic arrays, meaning each element is stored at a predictable memory offset from the base address. This allows direct index-based access in constant time O(1), regardless of the list size.",
+    "distractor_explanations": [
+      "A) O(n) would be the complexity for a linear search through unsorted data, not for index-based access where the memory address is computed directly.",
+      "B) O(log n) is the complexity of binary search on a sorted array, which involves repeated halving — index access performs no such comparisons.",
+      "D) O(n log n) is the complexity of efficient sorting algorithms like merge sort and has no relation to simple element access."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Traversal and Manipulation",
+    "company_pattern": "TCS NQT",
+    "hint": "Think about how lockers in a row work — can you jump directly to locker #5 without checking #1, #2, #3, #4?"
+  },
+  {
+    "id": "q_ds_arrays_2",
+    "question": "Which of the following correctly checks if two strings s and t are anagrams of each other in Python?",
+    "options": [
+      "A) return s == t",
+      "B) return sorted(s) == sorted(t)",
+      "C) return len(s) == len(t)",
+      "D) return s.lower() == t.lower()"
+    ],
+    "correct_index": 1,
+    "explanation": "Two strings are anagrams if they contain the same characters with the same frequencies. Sorting both strings rearranges their characters into canonical order, and if the sorted versions are equal, the strings are anagrams. This approach works correctly in O(n log n) time.",
+    "distractor_explanations": [
+      "A) Comparing s == t checks for identical strings, not anagrams — 'listen' and 'silent' are anagrams but s == t would return False.",
+      "C) Checking only length equality is necessary but not sufficient — 'ab' and 'cc' have equal lengths but are not anagrams.",
+      "D) Converting both to lowercase only handles case differences and does not verify that the character frequencies match — 'abc' and 'aab' would still fail this check."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Anagram and Palindrome Patterns",
+    "company_pattern": "Wipro NLTH",
+    "hint": "An anagram has the same characters in possibly different order — how can sorting help establish a common order for comparison?"
+  },
+  {
+    "id": "q_ds_arrays_3",
+    "question": "Given the array arr = [3, 1, 4, 1, 5, 9, 2, 6], what does the function second_largest(arr) return based on the algorithm described in the article (which requires the second largest to be strictly different from the largest)?",
+    "options": [
+      "A) 5",
+      "B) 6",
+      "C) 9",
+      "D) 4"
+    ],
+    "correct_index": 1,
+    "explanation": "Tracing the algorithm: after initializing first=4, second=3 (since arr[1]=1 < arr[0]=3, we swap to first=3, second=1 — wait, arr[0]=3, arr[1]=1, so first=3, second=1). Then: i=2 (4): 4>3, so second=3, first=4. i=3 (1): 1 not > 4, 1 not > 3 — no change. i=4 (5): 5>4, so second=4, first=5. i=5 (9): 9>5, so second=5, first=9. i=6 (2): 2 not > 9, 2 not > 5 — no change. i=7 (6): 6 not > 9, 6 > 5 and 6 != 9, so second=6. Final: second=6.",
+    "distractor_explanations": [
+      "A) 5 was the second largest at one point during traversal but got replaced by 6 at i=7, so returning 5 would reflect an incomplete traversal.",
+      "C) 9 is the largest element (first), not the second largest — the algorithm tracks first and second as distinct values.",
+      "D) 4 was the second largest early in the traversal but was subsequently replaced by 5 and then 6 as larger elements were encountered."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Traversal and Manipulation",
+    "company_pattern": "TCS NQT",
+    "hint": "Trace the algorithm step by step — both 'first' and 'second' get updated each time a new larger value is found."
+  },
+  {
+    "id": "q_ds_arrays_4",
+    "question": "For the array arr = [2, 4, 6, 8, 10] with prefix sum array prefix = [2, 6, 12, 20, 30], what is the range sum from index L=2 to R=4?",
+    "options": [
+      "A) 18",
+      "B) 28",
+      "C) 24",
+      "D) 30"
+    ],
+    "correct_index": 1,
+    "explanation": "Using the prefix sum formula: sum(L, R) = prefix[R] - prefix[L-1] = prefix[4] - prefix[1] = 30 - 6 = 24. Wait — arr[2]+arr[3]+arr[4] = 6+8+10 = 24, and prefix[4]-prefix[1] = 30-6 = 24. The correct answer is 24, which is option C.",
+    "distractor_explanations": [
+      "A) 18 equals prefix[3] - prefix[0] = 20 - 2 = 18, which is the range sum from L=1 to R=3, not L=2 to R=4.",
+      "B) 28 does not correspond to any valid range sum in this prefix array and likely results from an arithmetic error.",
+      "D) 30 is prefix[4], which equals the sum of the entire array (L=0 to R=4), not the subarray from index 2 to 4."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Prefix Sum and Difference Arrays",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "Apply the formula sum(L, R) = prefix[R] - prefix[L-1]. What is prefix[4] and prefix[1]?"
+  },
+  {
+    "id": "q_ds_arrays_5",
+    "question": "What is the output of the following Python code?\n\n```python\ndef max_subarray(arr):\n    max_ending_here = arr[0]\n    max_so_far = arr[0]\n    for i in range(1, len(arr)):\n        max_ending_here = max(arr[i], max_ending_here + arr[i])\n        max_so_far = max(max_so_far, max_ending_here)\n    return max_so_far\n\nprint(max_subarray([-3, -1, -2]))\n```",
+    "options": [
+      "A) 0",
+      "B) -3",
+      "C) -1",
+      "D) -6"
+    ],
+    "correct_index": 2,
+    "explanation": "Tracing Kadane's algorithm on [-3, -1, -2]: Initialize max_ending_here = -3, max_so_far = -3. i=1 (arr[1]=-1): max_ending_here = max(-1, -3 + -1) = max(-1, -4) = -1; max_so_far = max(-3, -1) = -1. i=2 (arr[2]=-2): max_ending_here = max(-2, -1 + -2) = max(-2, -3) = -2; max_so_far = max(-1, -2) = -1. Result: -1, which is the least negative (largest) element.",
+    "distractor_explanations": [
+      "A) 0 would only be returned if max_ending_here were reset to 0 on negative sums, which is a common mistake — the article explicitly warns against initializing to 0 for all-negative arrays.",
+      "B) -3 is the first element and the initial value of both trackers, but it gets replaced at i=1 when -1 is found to be larger.",
+      "D) -6 is the sum of all three elements, which would only result from blindly summing the entire array without the max() selection at each step."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Kadane's Algorithm and Variants",
+    "company_pattern": "Infosys HackWithInfy",
+    "hint": "The algorithm initializes to arr[0], not 0 — this is the key to handling all-negative arrays. Trace each step carefully."
+  },
+  {
+    "id": "q_ds_arrays_6",
+    "question": "Using the fixed sliding window technique, what is the maximum sum of any contiguous subarray of size k=3 in the array [2, 1, 5, 1, 3, 2]?",
+    "options": [
+      "A) 8",
+      "B) 7",
+      "C) 9",
+      "D) 6"
+    ],
+    "correct_index": 2,
+    "explanation": "First window [2,1,5] sums to 8. Slide: subtract arr[0]=2, add arr[3]=1 → 8-2+1=7. Slide: subtract arr[1]=1, add arr[4]=3 → 7-1+3=9. Slide: subtract arr[2]=5, add arr[5]=2 → 9-5+2=6. Maximum across all windows: max(8, 7, 9, 6) = 9, corresponding to the subarray [5, 1, 3].",
+    "distractor_explanations": [
+      "A) 8 is the sum of the first window [2,1,5] and is a valid window sum, but it is not the maximum — window [5,1,3] produces a higher sum of 9.",
+      "B) 7 is the sum of window [1,5,1] (second window), which is less than the maximum of 9.",
+      "D) 6 is the sum of the last window [1,3,2], which is the smallest of all window sums in this array."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Sliding Window (Fixed and Variable)",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "Compute the first window sum, then slide by subtracting the leftmost element and adding the next element to the right."
+  },
+  {
+    "id": "q_ds_arrays_7",
+    "question": "What is the output of calling length_of_longest_substring(\"abba\") using the variable sliding window function from the article?",
+    "options": [
+      "A) 4",
+      "B) 3",
+      "C) 1",
+      "D) 2"
+    ],
+    "correct_index": 3,
+    "explanation": "Trace: left=0, char_index={}. right=0 ('a'): 'a' not in dict, char_index={'a':0}, max_len=1. right=1 ('b'): 'b' not in dict, char_index={'a':0,'b':1}, max_len=2. right=2 ('b'): char_index['b']=1 >= left(0), so left=1+1=2, char_index['b']=2, max_len=max(2, 2-2+1)=max(2,1)=2. right=3 ('a'): char_index['a']=0, but 0 < left(2), so left stays at 2. char_index['a']=3, max_len=max(2, 3-2+1)=max(2,2)=2. Final result: 2.",
+    "distractor_explanations": [
+      "A) 4 would be the length if no repeating characters were found and the entire string counted, but 'b' and 'a' both repeat in 'abba'.",
+      "B) 3 would result from incorrectly allowing the second 'b' to extend the window without moving the left pointer, giving window 'abb' of length 3.",
+      "C) 1 would only occur if the algorithm reset the window to a single character on every repeat, which is more aggressive than necessary — the correct logic only moves left past the previous occurrence."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Sliding Window (Fixed and Variable)",
+    "company_pattern": "Amazon",
+    "hint": "Pay close attention to the condition 'char_index.get(s[right], -1) >= left' — this prevents the left pointer from jumping backward when a character was seen before the current window started."
+  },
+  {
+    "id": "q_ds_arrays_8",
+    "question": "After calling rotate(arr, 3) on arr = [1, 2, 3, 4, 5, 6, 7] using the reversal technique described in the article, what is the resulting array?",
+    "options": [
+      "A) [3, 4, 5, 6, 7, 1, 2]",
+      "B) [5, 6, 7, 1, 2, 3, 4]",
+      "C) [4, 5, 6, 7, 1, 2, 3]",
+      "D) [2, 3, 4, 5, 6, 7, 1]"
+    ],
+    "correct_index": 1,
+    "explanation": "The reversal technique for rotating right by k=3: Step 1 — reverse all: [7,6,5,4,3,2,1]. Step 2 — reverse first k=3 elements: [5,6,7,4,3,2,1]. Step 3 — reverse elements from index k to end: [5,6,7,1,2,3,4]. This correctly rotates the array right by 3 positions.",
+    "distractor_explanations": [
+      "A) [3,4,5,6,7,1,2] corresponds to a left rotation by 2 (or right rotation by 5), not a right rotation by 3.",
+      "C) [4,5,6,7,1,2,3] corresponds to a right rotation by 4 positions (or equivalently left rotation by 3), which is a different rotation direction/amount.",
+      "D) [2,3,4,5,6,7,1] corresponds to a right rotation by only 1 position, not by k=3."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Rotation, Reversal, Rearrangement",
+    "company_pattern": "Amazon",
+    "hint": "Three reversal steps: (1) reverse the entire array, (2) reverse the first k elements, (3) reverse the remaining elements from index k onwards."
+  },
+  {
+    "id": "q_ds_arrays_9",
+    "question": "Consider the KMP LPS array construction for the pattern \"aabaab\". What is the complete LPS array?",
+    "options": [
+      "A) [0, 1, 0, 1, 2, 3]",
+      "B) [0, 0, 1, 1, 2, 3]",
+      "C) [0, 1, 1, 2, 3, 3]",
+      "D) [0, 1, 0, 0, 1, 2]"
+    ],
+    "correct_index": 0,
+    "explanation": "LPS[i] = length of the longest proper prefix of pattern[0..i] that is also a suffix. Index 0 ('a'): LPS[0]=0 (by definition). Index 1 ('aa'): prefix 'a' == suffix 'a', LPS[1]=1. Index 2 ('aab'): no proper prefix that is also a suffix matches, LPS[2]=0. Index 3 ('aaba'): prefix 'a' == suffix 'a', LPS[3]=1. Index 4 ('aabaa'): prefix 'aa' == suffix 'aa', LPS[4]=2. Index 5 ('aabaab'): prefix 'aab' == suffix 'aab', LPS[5]=3. Result: [0,1,0,1,2,3].",
+    "distractor_explanations": [
+      "B) [0,0,1,1,2,3] incorrectly sets LPS[1]=0 for 'aa', which has a matching proper prefix-suffix 'a' of length 1, and incorrectly sets LPS[2]=1 for 'aab' where no proper prefix matches the suffix.",
+      "C) [0,1,1,2,3,3] incorrectly assigns LPS[2]=1 for 'aab' (no prefix of 'aab' is also its suffix) and cascades further errors throughout the array.",
+      "D) [0,1,0,0,1,2] correctly identifies LPS[0] through LPS[2] but incorrectly computes LPS[3]=0 for 'aaba' where prefix 'a' matches suffix 'a', giving LPS[3]=1."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_arrays",
+    "subtopic": "String Matching (KMP)",
+    "company_pattern": "Microsoft",
+    "hint": "For each index i, ask: what is the longest prefix of pattern[0..i] that also appears as a suffix? The prefix must be proper (not the full string itself)."
+  },
+  {
+    "id": "q_ds_arrays_10",
+    "question": "A student writes the following Kadane's variant to find the maximum subarray sum, but initializes differently:\n\n```python\ndef max_sub(arr):\n    max_here = 0\n    max_so_far = 0\n    for x in arr:\n        max_here = max(x, max_here + x)\n        max_so_far = max(max_so_far, max_here)\n    return max_so_far\n\nprint(max_sub([-5, -2, -8, -1]))\n```\n\nWhat does this code output, and why is it incorrect for this input?",
+    "options": [
+      "A) Outputs -1, which is correct because -1 is the maximum element",
+      "B) Outputs 0, which is incorrect because the true maximum subarray sum is -1",
+      "C) Outputs -1, which is incorrect because Kadane's should return 0 for all-negative arrays",
+      "D) Outputs 0, which is correct because no positive subarray exists"
+    ],
+    "correct_index": 1,
+    "explanation": "Tracing with [-5,-2,-8,-1]: max_here and max_so_far both start at 0. For each element: x=-5 → max_here=max(-5, 0-5)=-5, max_so_far=max(0,-5)=0. x=-2 → max_here=max(-2,-5-2)=-2, max_so_far=max(0,-2)=0. x=-8 → max_here=max(-8,-2-8)=-8, max_so_far=max(0,-8)=0. x=-1 → max_here=max(-1,-8-1)=-1, max_so_far=max(0,-1)=0. Output is 0. The correct answer should be -1 (the least negative element), so initializing both trackers to 0 produces an incorrect result for all-negative arrays.",
+    "distractor_explanations": [
+      "A) The code does not output -1 — because max_so_far is initialized to 0 and never drops below 0 due to the max(x, max_here+x) logic, the final result remains 0, not -1.",
+      "C) The code outputs 0 (not -1), and the claim that Kadane's should return 0 for all-negative arrays is wrong — the problem asks for the maximum subarray sum which must include at least one element, so the correct answer is -1.",
+      "D) Returning 0 is incorrect because the problem requires selecting at least one element from the array — an empty subarray sum of 0 is not a valid answer when all elements are present and negative."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_arrays",
+    "subtopic": "Kadane's Algorithm and Variants",
+    "company_pattern": "Amazon",
+    "hint": "The article explicitly warns: 'initializing max_ending_here = 0 breaks all-negative inputs.' Trace the code and check what max_so_far holds after processing all four negative numbers."
+  }
+]

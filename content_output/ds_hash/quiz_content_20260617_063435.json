@@ -1,0 +1,222 @@
+[
+  {
+    "id": "q_ds_hash_1",
+    "question": "What is the average-case time complexity of a lookup operation in a hash table?",
+    "options": [
+      "A) O(n)",
+      "B) O(log n)",
+      "C) O(1)",
+      "D) O(n log n)"
+    ],
+    "correct_index": 2,
+    "explanation": "A hash table uses a hash function to compute the index directly, allowing any key to be located without scanning other elements. On average, with a good hash function and reasonable load factor, this index computation and single-slot access takes constant O(1) time regardless of table size.",
+    "distractor_explanations": [
+      "A) O(n) is the worst-case time complexity when all keys collide into the same bucket, not the average case under normal operating conditions.",
+      "B) O(log n) is the lookup complexity for balanced binary search trees like AVL trees or Red-Black trees, not hash tables.",
+      "D) O(n log n) is the complexity of efficient sorting algorithms like merge sort and has no relevance to single-element hash table lookups."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_hash",
+    "subtopic": "Time Complexity",
+    "company_pattern": "TCS NQT",
+    "hint": "Think about what makes hash tables special compared to arrays and linked lists — they map keys directly to positions."
+  },
+  {
+    "id": "q_ds_hash_2",
+    "question": "In Python, which of the following will raise a TypeError when used as a dictionary key?",
+    "options": [
+      "A) (1, 2, 3)",
+      "B) \"hello\"",
+      "C) [1, 2, 3]",
+      "D) 42"
+    ],
+    "correct_index": 2,
+    "explanation": "Python dictionaries require keys to be hashable, which means they must be immutable. Lists are mutable objects — their contents can change after creation — so Python raises a TypeError ('unhashable type: list') when you attempt to use a list as a dictionary key.",
+    "distractor_explanations": [
+      "A) Tuples are immutable sequences and are fully hashable in Python, so (1, 2, 3) is a valid dictionary key.",
+      "B) Strings are immutable in Python and are perfectly valid dictionary keys used in everyday programming.",
+      "D) Integers are immutable primitive types and are the most common type of dictionary key in Python."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_hash",
+    "subtopic": "Hashability and Key Requirements",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "Only immutable (unchangeable) objects can be dictionary keys in Python. Ask yourself: which option can have its contents modified after creation?"
+  },
+  {
+    "id": "q_ds_hash_3",
+    "question": "What does `d.get('key', 0)` return when the key 'key' does NOT exist in dictionary `d`?",
+    "options": [
+      "A) None",
+      "B) 0",
+      "C) KeyError is raised",
+      "D) False"
+    ],
+    "correct_index": 1,
+    "explanation": "The `dict.get(key, default)` method returns the default value (the second argument) when the key is not found in the dictionary, instead of raising an exception. Here the default is explicitly set to 0, so that value is returned.",
+    "distractor_explanations": [
+      "A) None is what `d.get('key')` returns when called with no default argument and the key is missing — but here a default of 0 is provided, so 0 takes precedence.",
+      "C) KeyError is raised only when you access a missing key using bracket notation `d['key']`, not when using the `.get()` method which is specifically designed to avoid this error.",
+      "D) False is not a value this method would return unless explicitly passed as the default argument; the default provided in this call is the integer 0."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_hash",
+    "subtopic": "Python Dictionary Methods",
+    "company_pattern": "Wipro Elite",
+    "hint": "The second argument to `.get()` is what you receive back when the key is absent."
+  },
+  {
+    "id": "q_ds_hash_4",
+    "question": "A hash table has 8 slots and uses the hash function `h(k) = k % 8`. Which slot does key 37 map to?",
+    "options": [
+      "A) 3",
+      "B) 4",
+      "C) 5",
+      "D) 7"
+    ],
+    "correct_index": 2,
+    "explanation": "Applying the division method: 37 % 8 = 5, because 8 × 4 = 32 and 37 − 32 = 5. So key 37 maps to slot index 5.",
+    "distractor_explanations": [
+      "A) Slot 3 would result from 27 % 8 = 3 or 35 % 8 = 3, not from 37 % 8.",
+      "B) Slot 4 would result from 36 % 8 = 4 (since 8 × 4 = 32 and 36 − 32 = 4), not from 37 % 8.",
+      "D) Slot 7 would result from 39 % 8 = 7, not from 37 % 8."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_hash",
+    "subtopic": "Hash Functions — Division Method",
+    "company_pattern": "AMCAT",
+    "hint": "Divide 37 by 8 and find the remainder."
+  },
+  {
+    "id": "q_ds_hash_5",
+    "question": "What is the output of the following Python code?\n\n```python\nfrom collections import Counter\nwords = ['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']\nfreq = Counter(words)\nprint(freq.most_common(1))\n```",
+    "options": [
+      "A) [('apple', 3)]",
+      "B) {'apple': 3}",
+      "C) ('apple', 3)",
+      "D) [('apple', 3), ('banana', 2)]"
+    ],
+    "correct_index": 0,
+    "explanation": "Counter counts occurrences: apple=3, banana=2, cherry=1. The method `most_common(1)` returns a list containing the single most frequent element as a (element, count) tuple, which is [('apple', 3)]. The return type is always a list of tuples.",
+    "distractor_explanations": [
+      "B) A plain dict like {'apple': 3} is not what most_common() returns; it always returns a list of (element, count) tuples, not a dictionary.",
+      "C) A bare tuple ('apple', 3) without the surrounding list brackets is incorrect; most_common() always wraps its results in a list even when only one item is requested.",
+      "D) [('apple', 3), ('banana', 2)] would be the result of most_common(2), which requests the top two elements, not most_common(1)."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_hash",
+    "subtopic": "Python collections.Counter",
+    "company_pattern": "Cognizant GenC",
+    "hint": "The argument to most_common() tells it how many top results to include in the returned list."
+  },
+  {
+    "id": "q_ds_hash_6",
+    "question": "Consider the Two Sum function below:\n\n```python\ndef two_sum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in seen:\n            return [seen[complement], i]\n        seen[num] = i\n    return []\n```\n\nWhat does `two_sum([3, 5, 2, 7, 4], 9)` return?",
+    "options": [
+      "A) [0, 3]",
+      "B) [1, 3]",
+      "C) [0, 4]",
+      "D) [2, 4]"
+    ],
+    "correct_index": 1,
+    "explanation": "Trace: i=0, num=3, complement=6, not in seen → seen={3:0}. i=1, num=5, complement=4, not in seen → seen={3:0, 5:1}. i=2, num=2, complement=7, not in seen → seen={3:0, 5:1, 2:2}. i=3, num=7, complement=2, 2 IS in seen at index 2 → return [seen[2], 3] = [2, 3]. Wait — complement=9-7=2, seen[2]=2, so result is [2, 3]. Re-checking: nums[1]=5, nums[3]=7, 5+7=12≠9. nums[0]=3, nums[3]=7, 3+7=10≠9. nums[2]=2, nums[3]=7, 2+7=9 ✓ → indices [2, 3]. The correct answer is [2, 3], which matches option B.",
+    "distractor_explanations": [
+      "A) [0, 3] would mean nums[0]+nums[3]=3+7=10, which does not equal the target 9.",
+      "C) [0, 4] would mean nums[0]+nums[4]=3+4=7, which does not equal the target 9.",
+      "D) [2, 4] would mean nums[2]+nums[4]=2+4=6, which does not equal the target 9."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_hash",
+    "subtopic": "Two Sum Pattern",
+    "company_pattern": "Amazon",
+    "hint": "Trace through the loop: at each step, check if (target - current_number) was seen before. The function returns as soon as a valid pair is found."
+  },
+  {
+    "id": "q_ds_hash_7",
+    "question": "In the subarray sum equals K algorithm, the prefix sum map is initialized with `{0: 1}` before the loop begins. What is the purpose of this initialization?",
+    "options": [
+      "A) To handle the edge case where the array is empty and avoid a KeyError",
+      "B) To count subarrays that start from index 0 and have sum equal to k",
+      "C) To ensure the prefix sum never becomes negative during iteration",
+      "D) To track when the running total exceeds the table size and trigger rehashing"
+    ],
+    "correct_index": 1,
+    "explanation": "When prefix_sum equals k at some index j, we need to count a subarray starting at index 0 (prefix_sum[j] - prefix_sum[0] = k - 0 = k). The initial entry {0:1} represents the 'empty prefix' before any elements are processed. Without it, subarrays like [3] in [3, 1, 2] with k=3 would be missed because prefix_sum=3, prefix_sum-k=0 would not be found in the map.",
+    "distractor_explanations": [
+      "A) While the algorithm does handle empty arrays gracefully, the initialization is not motivated by KeyError prevention — it serves the logical purpose of representing subarrays beginning at index 0.",
+      "C) The initialization has nothing to do with preventing negative prefix sums; negative prefix sums are perfectly valid and handled naturally by the algorithm.",
+      "D) Rehashing is an internal hash table resize operation triggered by load factor thresholds and is completely unrelated to the prefix sum algorithm logic."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_hash",
+    "subtopic": "Prefix Sum + HashMap Pattern",
+    "company_pattern": "Amazon",
+    "hint": "Think about what happens when the cumulative sum from index 0 to some index j equals exactly k. What does the algorithm need to find in the map at that moment?"
+  },
+  {
+    "id": "q_ds_hash_8",
+    "question": "You have a list of strings: `[\"eat\", \"tea\", \"tan\", \"ate\", \"nat\", \"bat\"]`. Using the group anagrams approach where each string's sorted version is used as a key, how many distinct keys will the resulting dictionary have?",
+    "options": [
+      "A) 6",
+      "B) 2",
+      "C) 3",
+      "D) 4"
+    ],
+    "correct_index": 2,
+    "explanation": "Sorting each string: 'eat'→'aet', 'tea'→'aet', 'tan'→'ant', 'ate'→'aet', 'nat'→'ant', 'bat'→'abt'. The distinct sorted keys are 'aet', 'ant', and 'abt' — exactly 3 unique keys, each grouping its anagram family.",
+    "distractor_explanations": [
+      "A) 6 would mean every string is its own unique key with no anagrams grouped together, which is incorrect since 'eat', 'tea', and 'ate' all sort to the same key 'aet'.",
+      "B) 2 would require only two distinct sorted forms across all six strings, but 'bat' sorts to 'abt' which is distinct from both 'aet' and 'ant', giving at least three keys.",
+      "D) 4 would imply one of the three anagram groups is split into two separate keys, but sorting is a deterministic canonical form that always produces the same key for anagrams."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_hash",
+    "subtopic": "Group Anagrams — Sorting as Canonical Key",
+    "company_pattern": "Google",
+    "hint": "Sort the characters of each string alphabetically and list all the distinct results."
+  },
+  {
+    "id": "q_ds_hash_9",
+    "question": "In a custom HashMap implementation using separate chaining, which scenario causes the worst-case O(n) lookup time?",
+    "options": [
+      "A) The load factor drops below 0.1, causing excessive empty buckets",
+      "B) All n keys produce the same hash value and land in a single bucket",
+      "C) The table size is a prime number, increasing collision probability",
+      "D) Two different keys produce hash values that differ by exactly 1"
+    ],
+    "correct_index": 1,
+    "explanation": "With separate chaining, each bucket holds a list of (key, value) pairs. If all n keys hash to the same index, that single bucket becomes a linked list of length n. Searching for any key in that bucket requires iterating through all n entries in the worst case, degrading lookup to O(n) — exactly like a linear scan.",
+    "distractor_explanations": [
+      "A) A very low load factor means most buckets are empty, which wastes memory but actually keeps individual bucket chains short, preserving fast O(1) lookup rather than degrading it.",
+      "C) A prime table size is a recommended best practice for the division hash method because it reduces collision clustering — it improves performance rather than causing worst-case behavior.",
+      "D) Two keys with hash values differing by 1 land in two different buckets, each holding at most one entry, so lookup remains O(1) with no degradation."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_hash",
+    "subtopic": "Collision Resolution — Separate Chaining",
+    "company_pattern": "Microsoft",
+    "hint": "Think about what the bucket's internal list looks like when every single key gets assigned to the same bucket index."
+  },
+  {
+    "id": "q_ds_hash_10",
+    "question": "Consider the sliding window function for longest substring without repeating characters:\n\n```python\ndef longest(s):\n    char_index = {}\n    left = 0\n    max_len = 0\n    for right, char in enumerate(s):\n        if char in char_index and char_index[char] >= left:\n            left = char_index[char] + 1\n        char_index[char] = right\n        max_len = max(max_len, right - left + 1)\n    return max_len\n```\n\nWhat does `longest(\"abba\")` return?",
+    "options": [
+      "A) 3",
+      "B) 4",
+      "C) 1",
+      "D) 2"
+    ],
+    "correct_index": 3,
+    "explanation": "Trace: right=0 char='a': not in map → map={'a':0}, window='a', max=1. right=1 char='b': not in map → map={'a':0,'b':1}, window='ab', max=2. right=2 char='b': 'b' in map AND char_index['b']=1 >= left=0 → left=2, map={'a':0,'b':2}, window='b', max=2. right=3 char='a': 'a' in map AND char_index['a']=0 >= left=2? 0 >= 2 is False → left stays 2, map={'a':3,'b':2}, window='ba', max=max(2,3-2+1)=max(2,2)=2. Result: 2.",
+    "distractor_explanations": [
+      "A) 3 would imply a window of three unique characters exists in 'abba', but the string only has two distinct characters 'a' and 'b', making a unique-char window of length 3 impossible.",
+      "B) 4 would mean the entire string 'abba' has no repeating characters, which is clearly false since both 'b' and 'a' appear twice.",
+      "C) 1 would result only if the algorithm incorrectly moved `left` backward when processing the second 'a' at right=3 — the `>= left` guard specifically prevents this, keeping the window at length 2."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_hash",
+    "subtopic": "Sliding Window + HashMap — Left Pointer Guard Condition",
+    "company_pattern": "Google",
+    "hint": "When processing the second 'a' at index 3, check carefully: is char_index['a']=0 greater than or equal to left=2? The answer determines whether left moves."
+  }
+]

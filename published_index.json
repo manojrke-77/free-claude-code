@@ -1,3 +1,5 @@
 {
-  "ds_arrays": 0.85
+  "ds_arrays": 0.85,
+  "ds_hash": 0.85,
+  "ds_trees": 0.25
 }

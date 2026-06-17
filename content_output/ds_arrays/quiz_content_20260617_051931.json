@@ -1,0 +1,222 @@
+[
+  {
+    "id": "q_ds_arrays_1",
+    "question": "What is the time complexity of accessing an element at a given index in an array?",
+    "options": [
+      "A) O(n)",
+      "B) O(log n)",
+      "C) O(1)",
+      "D) O(n²)"
+    ],
+    "correct_index": 2,
+    "explanation": "Arrays store elements at contiguous memory locations, so the address of any element can be computed directly as base_address + index × element_size. This arithmetic takes constant time regardless of array size, making random access O(1).",
+    "distractor_explanations": [
+      "A) O(n) would imply scanning through all elements to find one, which describes linear search in an unsorted array, not index-based access.",
+      "B) O(log n) describes binary search on a sorted array, not direct index access.",
+      "D) O(n²) describes nested loop operations such as bubble sort, not element access."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Fundamentals",
+    "company_pattern": "TCS NQT",
+    "hint": "Think about how the CPU computes the memory address from a base pointer and an index."
+  },
+  {
+    "id": "q_ds_arrays_2",
+    "question": "Which of the following correctly checks whether a string `s` is a palindrome using the two-pointer technique in Python?",
+    "options": [
+      "A) left, right = 0, len(s); while left < right: if s[left] != s[right]: return False; left += 1; right -= 1",
+      "B) left, right = 0, len(s) - 1; while left < right: if s[left] != s[right]: return False; left += 1; right -= 1",
+      "C) left, right = 0, len(s) - 1; while left <= right: if s[left] != s[right]: return False; left += 1; right -= 1",
+      "D) left, right = 1, len(s) - 1; while left < right: if s[left] != s[right]: return False; left += 1; right -= 1"
+    ],
+    "correct_index": 1,
+    "explanation": "The right pointer must start at `len(s) - 1` (the last valid index) and the loop condition `left < right` ensures we stop at the center without re-comparing already matched pairs. When `left == right` (odd-length string center), no comparison is needed since a single character is always equal to itself.",
+    "distractor_explanations": [
+      "A) Setting `right = len(s)` causes an index-out-of-bounds error on the first access of `s[right]`, since valid indices go from 0 to len(s)-1.",
+      "C) Using `left <= right` is harmless for correctness (the center element self-comparison is always True), but option B with `left < right` is the canonical and more clearly correct implementation that mirrors the article's exact code.",
+      "D) Starting `left` at 1 skips the first character `s[0]`, causing incorrect results for strings like 'ab' where the first and last characters must be compared."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Palindrome Check",
+    "company_pattern": "Wipro Elite",
+    "hint": "Remember that Python list/string indices are 0-based, so the last character is at index len(s) - 1."
+  },
+  {
+    "id": "q_ds_arrays_3",
+    "question": "Two strings are anagrams if they contain the same characters with the same frequencies. Which pair below is NOT an anagram pair?",
+    "options": [
+      "A) \"listen\" and \"silent\"",
+      "B) \"triangle\" and \"integral\"",
+      "C) \"apple\" and \"papel\"",
+      "D) \"hello\" and \"world\""
+    ],
+    "correct_index": 3,
+    "explanation": "\"hello\" has characters h, e, l, l, o while \"world\" has w, o, r, l, d — different character sets entirely. The frequency arrays for these two strings will differ at multiple positions, confirming they are not anagrams.",
+    "distractor_explanations": [
+      "A) \"listen\" and \"silent\" both contain exactly the letters e, i, l, n, s, t each once — they are valid anagrams.",
+      "B) \"triangle\" and \"integral\" both contain the letters a, e, g, i, l, n, r, t each once — they are valid anagrams.",
+      "C) \"apple\" and \"papel\" both contain the letters a, e, l, p, p — they are valid anagrams."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Anagram Check",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "Build a frequency count for each string and compare. Two strings of different lengths can never be anagrams."
+  },
+  {
+    "id": "q_ds_arrays_4",
+    "question": "Given array `arr = [2, 1, 5, 1, 3, 2]` and window size `k = 3`, what is the maximum sum of any contiguous subarray of size 3?",
+    "options": [
+      "A) 7",
+      "B) 8",
+      "C) 9",
+      "D) 6"
+    ],
+    "correct_index": 2,
+    "explanation": "Sliding the window of size 3: [2,1,5]=8, [1,5,1]=7, [5,1,3]=9, [1,3,2]=6. The maximum is 9, achieved by the subarray [5, 1, 3] at indices 2–4.",
+    "distractor_explanations": [
+      "A) 7 is the sum of the window [1, 5, 1], which is the second window — not the maximum.",
+      "B) 8 is the sum of the first window [2, 1, 5] — a valid window sum but not the highest.",
+      "D) 6 is the sum of the last window [1, 3, 2] — the smallest among all window sums here."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Sliding Window — Fixed Size",
+    "company_pattern": "TCS NQT",
+    "hint": "Compute the sum of each consecutive group of 3 elements and track the maximum."
+  },
+  {
+    "id": "q_ds_arrays_5",
+    "question": "What will the following Python code output?\n\n```python\narr = [1, 2, 3, 4, 5, 6, 7]\nk = 3\nn = len(arr)\nk = k % n\narr = arr[n-k:] + arr[:n-k]\nprint(arr)\n```",
+    "options": [
+      "A) [5, 6, 7, 1, 2, 3, 4]",
+      "B) [3, 4, 5, 6, 7, 1, 2]",
+      "C) [4, 5, 6, 7, 1, 2, 3]",
+      "D) [1, 2, 3, 4, 5, 6, 7]"
+    ],
+    "correct_index": 0,
+    "explanation": "With n=7 and k=3, `arr[n-k:]` = `arr[4:]` = [5,6,7] and `arr[:n-k]` = `arr[:4]` = [1,2,3,4]. Concatenating gives [5,6,7,1,2,3,4], which is the array rotated right by 3 positions.",
+    "distractor_explanations": [
+      "B) [3,4,5,6,7,1,2] would result from a left rotation by 2 (or right rotation by 5), not a right rotation by 3.",
+      "C) [4,5,6,7,1,2,3] would result from a right rotation by 4, not by 3.",
+      "D) [1,2,3,4,5,6,7] would only result if k were 0 or 7 (a full rotation), but k=3 after normalization."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Rotation",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "A right rotation by k means the last k elements move to the front. Evaluate arr[n-k:] and arr[:n-k] separately."
+  },
+  {
+    "id": "q_ds_arrays_6",
+    "question": "Apply Kadane's algorithm to the array `[-2, 1, -3, 4, -1, 2, 1, -5, 4]`. What is the maximum subarray sum and which subarray produces it?",
+    "options": [
+      "A) Sum = 5, subarray [4, -1, 2, 1, -5, 4]",
+      "B) Sum = 6, subarray [4, -1, 2, 1]",
+      "C) Sum = 5, subarray [-1, 2, 1, -5, 4]",
+      "D) Sum = 6, subarray [1, -3, 4, -1, 2, 1]"
+    ],
+    "correct_index": 1,
+    "explanation": "Tracing Kadane's: at index 3, current_max resets to 4. Then 4→3→5→6→1→5. The global maximum is 6, achieved by extending from index 3 to index 6: [4, -1, 2, 1] = 4 + (-1) + 2 + 1 = 6.",
+    "distractor_explanations": [
+      "A) [4,-1,2,1,-5,4] sums to 5, not 6 — this subarray extends too far right, pulling the sum down from the optimal 6.",
+      "C) [-1,2,1,-5,4] sums to 1, not 5 — this subarray starts with a negative element, reducing the total unnecessarily.",
+      "D) [1,-3,4,-1,2,1] sums to 4, not 6, and this subarray begins at a position where including the leading 1 and -3 is suboptimal compared to starting fresh at index 3."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Kadane's Algorithm",
+    "company_pattern": "Amazon",
+    "hint": "Trace the table: at each index, current_max = max(arr[i], current_max + arr[i]). Watch for when current_max resets to arr[i]."
+  },
+  {
+    "id": "q_ds_arrays_7",
+    "question": "For the prefix sum array built from `arr = [3, -1, 4, 2, -5, 6]`, what is the sum of elements from index 2 to index 4 (inclusive, 0-based)?",
+    "options": [
+      "A) 1",
+      "B) 6",
+      "C) -3",
+      "D) 3"
+    ],
+    "correct_index": 0,
+    "explanation": "The prefix sum array is prefix = [3, 2, 6, 8, 3, 9]. The range sum from index L=2 to R=4 is prefix[4] - prefix[1] = 3 - 2 = 1. Direct verification: arr[2]+arr[3]+arr[4] = 4+2+(-5) = 1.",
+    "distractor_explanations": [
+      "B) 6 equals prefix[2] alone, which is the cumulative sum from index 0 to 2, not the range sum from 2 to 4.",
+      "C) -3 would result from incorrectly computing prefix[4] - prefix[2] = 3 - 6 = -3, which uses the wrong left boundary (should subtract prefix[L-1] = prefix[1], not prefix[L]).",
+      "D) 3 equals prefix[4] itself, the cumulative sum from index 0 to 4, not a range-limited sum."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Prefix Sum",
+    "company_pattern": "Wipro NLTH",
+    "hint": "Range sum formula: sum(L, R) = prefix[R] - prefix[L-1]. Be careful about which prefix index to subtract."
+  },
+  {
+    "id": "q_ds_arrays_8",
+    "question": "Consider the sliding window code below for 'Longest Substring Without Repeating Characters':\n\n```python\ndef longest(s):\n    char_index = {}\n    left = 0\n    max_len = 0\n    for right in range(len(s)):\n        char = s[right]\n        if char in char_index and char_index[char] >= left:\n            left = char_index[char] + 1\n        char_index[char] = right\n        max_len = max(max_len, right - left + 1)\n    return max_len\n```\n\nWhat does `longest(\"abba\")` return?",
+    "options": [
+      "A) 3",
+      "B) 4",
+      "C) 1",
+      "D) 2"
+    ],
+    "correct_index": 3,
+    "explanation": "Tracing: right=0 ('a'): window=[a], len=1. right=1 ('b'): window=[ab], len=2. right=2 ('b'): 'b' seen at index 1 >= left(0), so left=2, window=[b], len=1. right=3 ('a'): 'a' seen at index 0, but 0 < left(2), so left stays at 2, window=[ba], len=2. max_len=2.",
+    "distractor_explanations": [
+      "A) 3 would occur if the condition `char_index[char] >= left` were missing, causing left to incorrectly jump back to index 1 when 'a' is encountered at right=3, giving a wrong window of size 3 that includes a repeat.",
+      "B) 4 would be the result if no window shrinking occurred at all, simply returning the full string length — but 'abba' contains repeated characters.",
+      "C) 1 would be the result only if the algorithm reset the window completely on every repeat, which would be an overly aggressive shrink strategy not implemented here."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Sliding Window — Variable Size",
+    "company_pattern": "Amazon",
+    "hint": "Trace right=3 carefully: check whether char_index['a']=0 satisfies the condition >= left=2 before deciding whether to move left."
+  },
+  {
+    "id": "q_ds_arrays_9",
+    "question": "What is the LPS (Longest Proper Prefix which is also Suffix) array for the pattern `\"aabaaab\"`?",
+    "options": [
+      "A) [0, 1, 0, 1, 2, 2, 3]",
+      "B) [0, 1, 0, 1, 2, 3, 2]",
+      "C) [0, 1, 0, 1, 2, 2, 2]",
+      "D) [0, 0, 1, 0, 1, 2, 3]"
+    ],
+    "correct_index": 0,
+    "explanation": "Building the LPS for 'aabaaab' step by step: lps[0]=0 (base). i=1: pattern[1]='a'==pattern[0]='a', lps[1]=1. i=2: pattern[2]='b'!=pattern[1]='a', length resets to 0, lps[2]=0. i=3: pattern[3]='a'==pattern[0]='a', lps[3]=1. i=4: pattern[4]='a'==pattern[1]='a', lps[4]=2. i=5: pattern[5]='a', length=2, pattern[2]='b'!='a', fallback length=lps[1]=1, pattern[1]='a'=='a', lps[5]=2. i=6: pattern[6]='b', length=2, pattern[2]='b'=='b', lps[6]=3. Result: [0,1,0,1,2,2,3].",
+    "distractor_explanations": [
+      "B) [0,1,0,1,2,3,2] incorrectly assigns lps[5]=3 and lps[6]=2, which would mean the 6-character prefix 'aabaa' has a prefix-suffix of length 3 and the full pattern has one of length 2 — both values are swapped from the correct computation.",
+      "C) [0,1,0,1,2,2,2] incorrectly assigns lps[6]=2, failing to recognise that 'aabaaab'[0:3]='aab' equals 'aabaaab'[4:7]='aab', giving a correct longest prefix-suffix of length 3.",
+      "D) [0,0,1,0,1,2,3] shifts all values by one position, as if the LPS computation started at index 0 instead of treating lps[0]=0 as the fixed base case."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_arrays",
+    "subtopic": "KMP String Matching — LPS Array",
+    "company_pattern": "Amazon",
+    "hint": "At each position i, check if pattern[i] matches pattern[length]. If not and length > 0, fall back to lps[length-1] without incrementing i."
+  },
+  {
+    "id": "q_ds_arrays_10",
+    "question": "Apply the maximum product subarray algorithm to `[-2, 3, -4]`. What is the maximum product, and which subarray produces it?",
+    "options": [
+      "A) 12, subarray [-2, 3, -4]",
+      "B) 6, subarray [3, -4]",
+      "C) 24, subarray [-2, 3, -4]",
+      "D) 3, subarray [3]"
+    ],
+    "correct_index": 2,
+    "explanation": "Tracing the algorithm: i=0: cur_max=-2, cur_min=-2, max_prod=-2. i=1: candidates=(3, -2*3=-6, -2*3=-6) → cur_max=3, cur_min=-6, max_prod=3. i=2 (arr[2]=-4): candidates=(-4, 3*(-4)=-12, -6*(-4)=24) → cur_max=24, cur_min=-12, max_prod=24. The maximum product is 24, achieved by the full array [-2, 3, -4] since (-2)*3*(-4)=24.",
+    "distractor_explanations": [
+      "A) 12 for the full array is incorrect — (-2)*3*(-4)=24, not 12. This distractor forgets the second negative sign flips the product back to positive.",
+      "B) 6 for subarray [3, -4] is incorrect — 3*(-4)=-12, not 6. This distractor incorrectly treats the negative as positive.",
+      "D) 3 for subarray [3] is a valid single-element product but larger products exist by extending through both negatives."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_arrays",
+    "subtopic": "Maximum Product Subarray — Kadane Variant",
+    "company_pattern": "Amazon",
+    "hint": "Track both cur_max and cur_min at every step. When you encounter a negative number, the current minimum (most negative) can flip to become the new maximum."
+  }
+]

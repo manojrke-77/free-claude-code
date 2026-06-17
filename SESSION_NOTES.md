@@ -183,7 +183,131 @@ The same bug class (wrong test case expected values, duplicate draft examples) p
 | `content_output/ds_arrays/quiz_content_20260617_041928.json` | Fixed q_ds_arrays_7 distractor C contradiction | Run 20 content fix |
 | `advaita_agents/test_reviewer.py` | Fixed COMBINED_PATH to use absolute path from script dir | Bug fix — relative path resolved from wrong cwd |
 
+---
+
+## Run 21 — Human Checkpoint Implementation (2026-06-17)
+
+### Pipeline restructured with two human checkpoints
+
+The old 5-agent sequential pipeline (`create_content_production_crew`) is replaced by a split flow:
+
+```
+Phase 1: Generation Crew (4 agents, ~$0.95)
+    Research → Writer → Quiz → Coding
+    ↓
+Auto-fix coding JSON (sandbox solution validation)
+    ↓
+⏸ CHECKPOINT #1: Human opens 3 content files, fixes surface errors, types 'ok'
+    ↓
+Phase 2: Reviewer-only Crew (~$0.10)
+    ↓
+⏸ CHECKPOINT #2: Human reads verdict + fixes list, types 'publish' or 'reject'
+    ↓
+published_index.json updated
+```
+
+### Files changed
+
+| File | Change | Why |
+|------|--------|-----|
+| `advaita_agents/crew.py` | Added `create_content_generation_crew()` (4 agents, no Reviewer) | Phase 1 runs without Reviewer |
+| `advaita_agents/crew.py` | Added `create_reviewer_crew(topic_id, topic_label, article_raw, quiz_raw, coding_raw)` | Phase 2 runs Reviewer standalone with content embedded directly in task description — same pattern as `test_reviewer.py` |
+| `advaita_agents/crew.py` | Kept `create_content_production_crew()` as-is | Backward compatibility |
+| `advaita_agents/main.py` | Changed import: `create_content_production_crew` → `create_content_generation_crew, create_reviewer_crew` | New crew functions for split pipeline |
+| `advaita_agents/main.py` | Added `_human_checkpoint_pre_review(topic_dir, timestamp) -> bool` | Checkpoint #1: lists files to edit, common fixes to look for, accepts 'ok'/'regenerate' |
+| `advaita_agents/main.py` | Added `_human_checkpoint_post_review(verdict, fixes, coverage_increment) -> bool` | Checkpoint #2: shows verdict + fixes, accepts 'publish'/'reject' |
+| `advaita_agents/main.py` | Restructured `_produce_topic()`: generation crew → auto-fix → checkpoint #1 → re-load files → Reviewer crew → checkpoint #2 → publish | Splits 5-agent kickoff into two phases with human gates between them |
+
+### Re-load logic after checkpoint #1
+
+After the human edits content files on disk, the pipeline re-reads them for the Reviewer. Individual files from `_save_task_output()` use `{"raw_output": "..."}` wrapping for non-JSON content (article markdown). The re-load logic detects this pattern and unwraps correctly:
+
+- `{"raw_output": "..."}` → extract inner string directly
+- Parsed JSON array/object (quiz, coding) → `json.dumps()` back to string
+
+### Human checkpoint #1 — design rationale
+
+Checks for the error classes that cost the LLM Reviewer its whole token budget to flag but a human can spot in seconds:
+- Duplicate draft examples with inline self-corrections
+- "wait, verify:" self-monologue artifacts in article text
+- Contradictory distractor arithmetic in MCQs
+- Typos and formatting issues
+- Inconsistent variable names in code snippets
+
+### Human checkpoint #2 — design rationale
+
+The Reviewer can produce a `rejected` verdict but the old pipeline automatically applied partial coverage (0.25). Now the human decides whether to publish at the Reviewer's suggested coverage or discard the run entirely. This prevents low-quality content from accumulating in `published_index.json`.
+
+### Cost impact
+
+- Full pipeline (old): ~$1.00 all-in, no human gates
+- Split pipeline (new): ~$0.95 (generation) + $0.10 (reviewer) = $1.05
+- Human time: ~3-5 min for checkpoint #1, ~1-2 min for checkpoint #2
+- Net savings: human catches surface errors in seconds that would cost the Reviewer ~4K tokens to flag and potentially trigger a full re-run (~$1.00)
+
 ### Next steps
 
-1. **Move to next topic** from `roadmap_scored.json` (ds_arrays is at 0.85, acceptable for now)
-2. **Coding agent auto-fix**: Consider running `_validate_coding_solutions()` as a pre-Reviewer step that auto-corrects expected values in the coding JSON before the Reviewer sees it
+1. **Test the pipeline end-to-end**: `uv run python advaita_agents/main.py produce --topic-id ds_arrays`
+2. **Move to next topic** from `roadmap_scored.json` after ds_arrays reaches `approved`
+3. ~~Coding agent auto-fix~~ ✅ Implemented in run 20
+
+---
+
+## Session 2026-06-17 (continuation) — CLAUDE.md audit + batch pipeline runs
+
+### CLAUDE.md / AGENTS.md accuracy audit
+
+Corrected 5 issues in CLAUDE.md (and synced to AGENTS.md):
+
+| Issue | Fix |
+|---|---|
+| "main.py no longer imports `create_topic_strategy_crew`" — false, it still does at line 72 | Removed the claim; gap analysis is offline but `cmd_roadmap()` still uses the crew |
+| Stale line numbers "~line 938" and "~line 968" for verdict parsing paths | Removed; described functionally ("single code path in `_produce_topic()`") |
+| Missing `run_phase2.py` from file structure listing | Added to file tree + run commands section |
+| Data file locations ambiguous | Clarified all paths resolve from repo root; warned about stale copies in `advaita_agents/` |
+| Per-run file count said "5 task outputs" | Corrected to "6 JSONs: 5 individual + combined" |
+
+Also discovered: `published_index.json` exists in both repo root (live: `{"ds_arrays": 0.85}`) and `advaita_agents/` (stale: `{"ds_arrays": 0.25}`). `gap_report.json` only exists in `advaita_agents/`. Both stale copies noted in CLAUDE.md as warnings.
+
+### Batch pipeline runs (`--skip-checkpoints`)
+
+| Topic | Verdict | Coverage | Notes |
+|---|---|---|---|
+| ds_arrays | approved_with_minor_fixes | 85% | Previous session, already published |
+| ds_hash | approved_with_minor_fixes | 85% | ✅ Published. Research hit max_iter=12 (DeepSeek transient), auto-fix corrected 1 coding test case |
+| ds_trees | **rejected** | 25% | ⚠️ Tree sandbox failure — see below |
+
+### 🆕 Critical discovery: Sandbox validator breaks on tree/graph problems
+
+The `_validate_coding_solutions()` sandbox cannot handle `TreeNode`-based inputs. Tree coding problems use LeetCode-style list representations (`root = [1, 2, null, 3]`) as test case inputs, but the sandbox has no `TreeNode` class — the solution code hits `.left`/`.right` on a raw list and raises `AttributeError`.
+
+**ds_trees impact:** 25 mismatches, **zero** auto-corrections. Every test case either failed to parse or raised `AttributeError`. The auto-fix system works for arrays/strings/hashes (primitive types) but not for linked data structures.
+
+**Affected future topics:**
+- ds_graphs (next in queue, score 6.0)
+- ds_linked_list
+- Any topic with non-linear data structures
+
+**Possible fixes:**
+1. Add a `TreeNode` deserializer to the sandbox that converts LeetCode list format into actual TreeNode objects before executing solutions
+2. Add a `build_tree()` helper requirement in the Coding agent task description for tree problems
+3. Both (defense in depth)
+
+### ds_trees: 10 Reviewer-flagged issues
+
+2 CRITICAL (wrong MCQ answers), 3 MAJOR (missing Segment Tree/BST content, wrong height convention contradicting LeetCode), 5 MODERATE/MINOR (garbled text, missing complexity analysis).
+
+Content files at:
+- `content_output/ds_trees/article_content_20260617_064328.json`
+- `content_output/ds_trees/quiz_content_20260617_064328.json`
+- `content_output/ds_trees/coding_problems_20260617_064328.json`
+
+### Pipeline queue (held per user request)
+
+1. ds_graphs (6.0) — will hit same TreeNode sandbox limitation
+2. algo_sort_search (6.0)
+3. algo_dp (6.0)
+
+### Current state
+
+`published_index.json`: `{"ds_arrays": 0.85, "ds_hash": 0.85, "ds_trees": 0.25}`

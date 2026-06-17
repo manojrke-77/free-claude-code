@@ -1,0 +1,273 @@
+[
+  {
+    "id": "cp_ds_arrays_1",
+    "title": "Warehouse Zone Scanner",
+    "difficulty": "easy",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA warehouse management system stores temperature readings as a string of lowercase letters, where each letter represents a sensor zone. Two zones are considered **equivalent** if one zone's reading is an anagram of the other (same characters, possibly different order).\n\nGiven two zone reading strings `zone1` and `zone2`, return `True` if they are anagrams of each other, otherwise return `False`.\n\n**Note:** Both strings contain only lowercase English letters.\n\n```python\ndef are_equivalent_zones(zone1: str, zone2: str) -> bool:\n    pass\n```",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_range": "lowercase English letters only",
+      "time_limit": "O(n)",
+      "note": "len(zone1) and len(zone2) are each between 1 and 100000"
+    },
+    "examples": [
+      {
+        "input": "zone1 = \"listen\", zone2 = \"silent\"",
+        "output": "True",
+        "explanation": "Both strings contain the same characters with the same frequencies (e, i, l, n, s, t each appearing once), so they are anagrams."
+      },
+      {
+        "input": "zone1 = \"abc\", zone2 = \"ab\"",
+        "output": "False",
+        "explanation": "The strings have different lengths, so they cannot be anagrams."
+      },
+      {
+        "input": "zone1 = \"aab\", zone2 = \"bba\"",
+        "output": "False",
+        "explanation": "zone1 has two 'a's and one 'b', while zone2 has two 'b's and one 'a', so they are not anagrams."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Sort both strings and compare them. If the sorted versions are identical, the strings are anagrams. This works because anagrams contain the same characters, and sorting brings them to the same order.",
+        "code": "def are_equivalent_zones(zone1: str, zone2: str) -> bool:\n    # Different lengths cannot be anagrams\n    if len(zone1) != len(zone2):\n        return False\n    # Sort both strings and compare\n    return sorted(zone1) == sorted(zone2)",
+        "time": "O(n log n)",
+        "space": "O(n)"
+      },
+      "optimal": {
+        "approach": "Use a frequency array of size 26 (one slot per lowercase letter). Increment counts for zone1 and decrement for zone2. If all counts are zero at the end, the strings are anagrams. This runs in O(n) time with O(1) extra space (fixed-size array).",
+        "code": "def are_equivalent_zones(zone1: str, zone2: str) -> bool:\n    # Different lengths cannot be anagrams\n    if len(zone1) != len(zone2):\n        return False\n\n    freq = [0] * 26  # frequency array for 'a' to 'z'\n\n    for ch in zone1:\n        freq[ord(ch) - ord('a')] += 1  # count chars in zone1\n\n    for ch in zone2:\n        freq[ord(ch) - ord('a')] -= 1  # subtract chars in zone2\n\n    # All counts must be zero for anagram\n    return all(count == 0 for count in freq)",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "zone1 = \"listen\", zone2 = \"silent\"",
+        "expected": "True",
+        "is_visible": true
+      },
+      {
+        "input": "zone1 = \"abc\", zone2 = \"ab\"",
+        "expected": "False",
+        "is_visible": true
+      },
+      {
+        "input": "zone1 = \"aab\", zone2 = \"bba\"",
+        "expected": "False",
+        "is_visible": true
+      },
+      {
+        "input": "zone1 = \"a\", zone2 = \"a\"",
+        "expected": "True",
+        "is_visible": false
+      },
+      {
+        "input": "zone1 = \"anagram\", zone2 = \"nagaram\"",
+        "expected": "True",
+        "is_visible": false
+      },
+      {
+        "input": "zone1 = \"rat\", zone2 = \"car\"",
+        "expected": "False",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "TCS",
+      "Infosys",
+      "Wipro",
+      "Amazon"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Two strings are anagrams if and only if they have the same character frequencies. What data structure efficiently tracks character counts?",
+      "Use an array of size 26, one slot for each lowercase letter. Increment counts for one string and decrement for the other.",
+      "After processing both strings, check if every element in the frequency array is zero. If yes, return True, otherwise return False."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_2",
+    "title": "Delivery Route Analyzer",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA logistics company records the daily profit/loss (in thousands) for each delivery route as an integer array `profits`. Some days have losses (negative values). The company wants to identify the **maximum total profit** achievable by selecting any contiguous sequence of days (at least one day must be selected).\n\nGiven the integer array `profits`, return the maximum sum of any non-empty contiguous subarray.\n\n```python\ndef max_route_profit(profits: list[int]) -> int:\n    pass\n```\n\n**Example interpretation:** For `profits = [-2, 1, -3, 4, -1, 2, 1, -5, 4]`, the best contiguous route is days 4–7 with values `[4, -1, 2, 1]`, giving a total profit of **6**.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_range": "-10000 <= profits[i] <= 10000",
+      "time_limit": "O(n)",
+      "note": "The array may contain all negative values; you must still pick at least one element."
+    },
+    "examples": [
+      {
+        "input": "profits = [-2, 1, -3, 4, -1, 2, 1, -5, 4]",
+        "output": "6",
+        "explanation": "The subarray [4, -1, 2, 1] (indices 3 to 6) has the maximum sum of 6."
+      },
+      {
+        "input": "profits = [-3, -1, -2]",
+        "output": "-1",
+        "explanation": "All values are negative, so the best single-element subarray is [-1] with sum -1."
+      },
+      {
+        "input": "profits = [5, 4, -1, 7, 8]",
+        "output": "23",
+        "explanation": "The entire array [5, 4, -1, 7, 8] sums to 23, which is the maximum possible."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check every possible subarray by using two nested loops. The outer loop fixes the starting index and the inner loop extends the ending index, accumulating the sum and tracking the maximum seen. This is O(n²) and will time out for large inputs but is useful for verifying correctness.",
+        "code": "def max_route_profit(profits: list[int]) -> int:\n    n = len(profits)\n    max_sum = profits[0]\n\n    for i in range(n):          # start index\n        current = 0\n        for j in range(i, n):   # end index\n            current += profits[j]\n            max_sum = max(max_sum, current)\n\n    return max_sum",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Kadane's Algorithm: traverse the array once, maintaining the best subarray sum ending at the current index (current_max) and the best seen so far (global_max). At each index, decide whether to extend the previous subarray or start a new one from the current element — whichever is larger. Initialize both from profits[0] to correctly handle all-negative arrays.",
+        "code": "def max_route_profit(profits: list[int]) -> int:\n    current_max = profits[0]  # best sum ending at current position\n    global_max = profits[0]   # best sum seen so far\n\n    for i in range(1, len(profits)):\n        # Extend existing subarray or start fresh at current element\n        current_max = max(profits[i], current_max + profits[i])\n        global_max = max(global_max, current_max)\n\n    return global_max",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "profits = [-2, 1, -3, 4, -1, 2, 1, -5, 4]",
+        "expected": "6",
+        "is_visible": true
+      },
+      {
+        "input": "profits = [-3, -1, -2]",
+        "expected": "-1",
+        "is_visible": true
+      },
+      {
+        "input": "profits = [5, 4, -1, 7, 8]",
+        "expected": "23",
+        "is_visible": true
+      },
+      {
+        "input": "profits = [1]",
+        "expected": "1",
+        "is_visible": false
+      },
+      {
+        "input": "profits = [-10000, 10000, -10000, 10000, -10000]",
+        "expected": "10000",
+        "is_visible": false
+      },
+      {
+        "input": "profits = [2, -1, 2, 3, 4, -1]",
+        "expected": "10",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "Google",
+      "Infosys",
+      "TCS"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "For each position, you have two choices: start a brand-new subarray at this element, or extend the subarray that ended at the previous element. Which gives a larger sum?",
+      "Track two variables: the best sum ending exactly at the current index, and the overall best sum seen so far. Update both as you traverse.",
+      "Use Kadane's formula: current_max = max(profits[i], current_max + profits[i]). Initialize both variables from profits[0] (not 0) to handle all-negative arrays correctly."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_3",
+    "title": "Fleet Dispatch Window",
+    "difficulty": "hard",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA fleet dispatch system processes orders as a string `orders` of lowercase letters, where each letter represents an order type. A **balanced dispatch window** is a contiguous substring that contains **at most 2 distinct order types**.\n\nGiven the string `orders`, return the **length of the longest balanced dispatch window** (longest substring with at most 2 distinct characters).\n\n```python\ndef longest_balanced_window(orders: str) -> int:\n    pass\n```",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_range": "lowercase English letters only",
+      "time_limit": "O(n)",
+      "note": "A single character is a valid window of length 1."
+    },
+    "examples": [
+      {
+        "input": "orders = \"eceba\"",
+        "output": "3",
+        "explanation": "The substring \"ece\" (indices 0–2) has 2 distinct characters and length 3, which is the longest such window."
+      },
+      {
+        "input": "orders = \"ccaabbb\"",
+        "output": "5",
+        "explanation": "The substring \"aabbb\" (indices 2–6) has 2 distinct characters ('a' and 'b') and length 5."
+      },
+      {
+        "input": "orders = \"a\"",
+        "output": "1",
+        "explanation": "A single-character string is trivially a valid window of length 1."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check every possible substring using two nested loops. For each starting index, extend the ending index and track distinct characters using a set. Stop extending when distinct characters exceed 2. Record the maximum length found. O(n²) time, acceptable only for small inputs.",
+        "code": "def longest_balanced_window(orders: str) -> int:\n    n = len(orders)\n    max_len = 0\n\n    for i in range(n):\n        seen = set()\n        for j in range(i, n):\n            seen.add(orders[j])\n            if len(seen) > 2:\n                break\n            max_len = max(max_len, j - i + 1)\n\n    return max_len",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Use a variable-size sliding window with a frequency hash map. Expand the right pointer to include new characters. When the window contains more than 2 distinct characters, shrink from the left by decrementing the frequency of orders[left] and removing it from the map when its count drops to zero. Track the maximum window size throughout. The window invariant (at most 2 distinct chars) is maintained by the shrink step.",
+        "code": "def longest_balanced_window(orders: str) -> int:\n    freq = {}    # frequency map of characters in current window\n    left = 0\n    max_len = 0\n\n    for right in range(len(orders)):\n        ch = orders[right]\n        freq[ch] = freq.get(ch, 0) + 1  # expand window to include orders[right]\n\n        # Shrink from left while more than 2 distinct chars in window\n        while len(freq) > 2:\n            left_ch = orders[left]\n            freq[left_ch] -= 1\n            if freq[left_ch] == 0:\n                del freq[left_ch]   # remove char with zero count\n            left += 1\n\n        max_len = max(max_len, right - left + 1)\n\n    return max_len",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "orders = \"eceba\"",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "orders = \"ccaabbb\"",
+        "expected": "5",
+        "is_visible": true
+      },
+      {
+        "input": "orders = \"a\"",
+        "expected": "1",
+        "is_visible": true
+      },
+      {
+        "input": "orders = \"abcabcabc\"",
+        "expected": "2",
+        "is_visible": false
+      },
+      {
+        "input": "orders = \"aaaa\"",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "orders = \"abaccc\"",
+        "expected": "4",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Google",
+      "Microsoft",
+      "Meta"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "This is a variable sliding window problem. Think about how to efficiently track the number of distinct characters inside a window as it expands and shrinks.",
+      "Use a hash map to store the frequency of each character in the current window. The number of keys in the map equals the number of distinct characters.",
+      "Expand the right pointer freely. Whenever the map has more than 2 keys (distinct chars), shrink from the left: decrement the frequency of orders[left] and delete the key if its count reaches zero, then increment left."
+    ]
+  }
+]

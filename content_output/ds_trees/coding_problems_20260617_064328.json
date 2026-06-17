@@ -1,0 +1,261 @@
+[
+  {
+    "id": "cp_ds_trees_1",
+    "title": "Visible Nodes at Each Level",
+    "difficulty": "easy",
+    "topic_id": "ds_trees",
+    "language": "python",
+    "problem_statement": "You are given a binary tree representing a corporate hierarchy. A manager at each level wants to know how many employees (nodes) exist at their level. Given the root of a binary tree, return a list where each element represents the count of nodes at that depth level, starting from the root (level 0).\n\n**Function signature**: `def nodes_per_level(root: TreeNode) -> List[int]`\n\nThe tree is represented using the standard TreeNode class with `val`, `left`, and `right` attributes. If the tree is empty, return an empty list.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 10000,
+      "value_range": "-1000 <= node.val <= 1000",
+      "time_limit": "O(n)",
+      "space_limit": "O(n)"
+    },
+    "examples": [
+      {
+        "input": "root = [1, 2, 3, 4, 5, null, 6]",
+        "output": "[1, 2, 3]",
+        "explanation": "Level 0 has 1 node (root=1), level 1 has 2 nodes (2 and 3), and level 2 has 3 nodes (4, 5, and 6)."
+      },
+      {
+        "input": "root = [7]",
+        "output": "[1]",
+        "explanation": "A single-node tree has only one level with one node, so the answer is [1]."
+      },
+      {
+        "input": "root = [1, 2, null, 3, null, null, null]",
+        "output": "[1, 1, 1]",
+        "explanation": "This is a left-skewed tree: root=1 at level 0, node 2 at level 1, node 3 at level 2, each level with exactly 1 node."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Use a recursive DFS that passes the current depth as a parameter. Maintain a dictionary mapping depth to count of nodes seen at that depth. After traversal, extract values in order of depth.",
+        "code": "from collections import defaultdict\n\ndef nodes_per_level(root):\n    depth_count = defaultdict(int)\n\n    def dfs(node, depth):\n        if node is None:\n            return\n        depth_count[depth] += 1\n        dfs(node.left, depth + 1)\n        dfs(node.right, depth + 1)\n\n    dfs(root, 0)\n    if not depth_count:\n        return []\n    max_depth = max(depth_count.keys())\n    return [depth_count[d] for d in range(max_depth + 1)]",
+        "time": "O(n)",
+        "space": "O(n) for the dictionary and O(h) recursion stack where h is the height"
+      },
+      "optimal": {
+        "approach": "BFS (level order traversal) using a queue. At each iteration, snapshot the queue size to know exactly how many nodes are on the current level. Process all nodes of that level, enqueue their children, and record the count.",
+        "code": "from collections import deque\n\ndef nodes_per_level(root):\n    if not root:\n        return []\n    result = []\n    queue = deque([root])\n    while queue:\n        level_size = len(queue)      # number of nodes on this level\n        result.append(level_size)\n        for _ in range(level_size):\n            node = queue.popleft()\n            if node.left:\n                queue.append(node.left)\n            if node.right:\n                queue.append(node.right)\n    return result",
+        "time": "O(n) — every node is enqueued and dequeued exactly once",
+        "space": "O(w) where w is the maximum width of the tree (at most n/2 for a full binary tree)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "root = [1, 2, 3, 4, 5, null, 6]",
+        "expected": "[1, 2, 3]",
+        "is_visible": true
+      },
+      {
+        "input": "root = [7]",
+        "expected": "[1]",
+        "is_visible": true
+      },
+      {
+        "input": "root = [1, 2, null, 3, null, null, null]",
+        "expected": "[1, 1, 1]",
+        "is_visible": true
+      },
+      {
+        "input": "root = [1, 2, 3, 4, 5, 6, 7]",
+        "expected": "[1, 2, 4]",
+        "is_visible": false
+      },
+      {
+        "input": "root = [1, null, 2, null, null, null, 3]",
+        "expected": "[1, 1, 1]",
+        "is_visible": false
+      },
+      {
+        "input": "root = [5, 3, 8, 1, 4, 7, 9]",
+        "expected": "[1, 2, 4]",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "TCS",
+      "Infosys"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Think about how to process nodes layer by layer — what data structure naturally gives you FIFO order?",
+      "Before processing a level, record how many nodes are currently in the queue — that tells you the exact count for this level.",
+      "Use a deque: snapshot `level_size = len(queue)`, append `level_size` to result, then loop exactly `level_size` times dequeuing nodes and enqueuing their children."
+    ]
+  },
+  {
+    "id": "cp_ds_trees_2",
+    "title": "Fleet Route Ancestor",
+    "difficulty": "medium",
+    "topic_id": "ds_trees",
+    "language": "python",
+    "problem_statement": "A logistics company models its delivery route network as a binary tree where each node represents a distribution hub. Given a binary tree (not necessarily a BST) and two hub IDs `p` and `q`, find the **lowest common ancestor (LCA)** — the deepest hub that is a direct ancestor of both p and q.\n\nA node is considered a descendant of itself. All node values in the tree are unique. Both p and q are guaranteed to exist in the tree.\n\n**Function signature**: `def find_lca(root: TreeNode, p: int, q: int) -> int`\n\nReturn the value of the LCA node.",
+    "constraints": {
+      "n_min": 2,
+      "n_max": 100000,
+      "value_range": "-10^9 <= node.val <= 10^9",
+      "note": "All node values are unique. Both p and q exist in the tree."
+    },
+    "examples": [
+      {
+        "input": "root = [3, 5, 1, 6, 2, 0, 8, null, null, 7, 4], p = 5, q = 1",
+        "output": "3",
+        "explanation": "Node 5 is in the left subtree and node 1 is in the right subtree of root 3, so root 3 is the lowest common ancestor."
+      },
+      {
+        "input": "root = [3, 5, 1, 6, 2, 0, 8, null, null, 7, 4], p = 5, q = 4",
+        "output": "5",
+        "explanation": "Node 4 is a descendant of node 5, so node 5 is its own ancestor and the LCA of 5 and 4 is 5 itself."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For each node, find the path from root to p and from root to q using DFS. Store both paths as lists. The LCA is the last common node in both paths before they diverge.",
+        "code": "def find_lca(root, p, q):\n    def find_path(node, target, path):\n        if node is None:\n            return False\n        path.append(node.val)\n        if node.val == target:\n            return True\n        if find_path(node.left, target, path) or find_path(node.right, target, path):\n            return True\n        path.pop()\n        return False\n\n    path_p, path_q = [], []\n    find_path(root, p, path_p)\n    find_path(root, q, path_q)\n    lca = root.val\n    for a, b in zip(path_p, path_q):\n        if a == b:\n            lca = a\n        else:\n            break\n    return lca",
+        "time": "O(n) — two separate DFS traversals, each O(n)",
+        "space": "O(n) for storing two root-to-node paths"
+      },
+      "optimal": {
+        "approach": "Single-pass recursive DFS. At each node: if the node matches p or q, return it. Recursively search left and right subtrees. If both return non-null, the current node is the LCA (p and q are on opposite sides). If only one side returns non-null, propagate that result upward.",
+        "code": "def find_lca(root, p, q):\n    def dfs(node):\n        if node is None:\n            return None\n        # If current node is one of the targets, it could be the LCA\n        if node.val == p or node.val == q:\n            return node\n        left = dfs(node.left)\n        right = dfs(node.right)\n        # Found targets on both sides: this node is the LCA\n        if left and right:\n            return node\n        # Propagate the non-null result upward\n        return left if left else right\n\n    return dfs(root).val",
+        "time": "O(n) — visits each node at most once",
+        "space": "O(h) for the recursion stack where h is the tree height (O(log n) balanced, O(n) skewed)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "root = [3, 5, 1, 6, 2, 0, 8, null, null, 7, 4], p = 5, q = 1",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "root = [3, 5, 1, 6, 2, 0, 8, null, null, 7, 4], p = 5, q = 4",
+        "expected": "5",
+        "is_visible": true
+      },
+      {
+        "input": "root = [1, 2, 3], p = 2, q = 3",
+        "expected": "1",
+        "is_visible": false
+      },
+      {
+        "input": "root = [1, 2, 3], p = 1, q = 2",
+        "expected": "1",
+        "is_visible": false
+      },
+      {
+        "input": "root = [10, 5, 15, 3, 7, null, 18], p = 3, q = 7",
+        "expected": "5",
+        "is_visible": false
+      },
+      {
+        "input": "root = [10, 5, 15, 3, 7, null, 18], p = 3, q = 15",
+        "expected": "10",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Meta",
+      "Microsoft",
+      "Apple",
+      "Google"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "Try thinking recursively: what should you return from a subtree when you find one of the two target nodes?",
+      "When recursing, if the left subtree returns a non-null result and the right subtree also returns a non-null result, the current node must be the LCA — both targets are on different sides.",
+      "Key edge case: if node p is an ancestor of q, when you reach p during recursion you return p immediately — you don't need to search further because p itself is the LCA in this scenario."
+    ]
+  },
+  {
+    "id": "cp_ds_trees_3",
+    "title": "Maximum Earning Path in Project Tree",
+    "difficulty": "hard",
+    "topic_id": "ds_trees",
+    "language": "python",
+    "problem_statement": "A company models its project dependencies as a binary tree where each node represents a project with an associated profit (can be negative — some projects are loss-making). A **project route** is any path in the tree that starts at some node and ends at some node, following parent-child edges. The route must contain at least one node and can go upward or downward, but cannot fork — it forms a single continuous chain.\n\nGiven the root of a binary tree, find the maximum total profit achievable along any such project route.\n\n**Function signature**: `def max_earning_path(root: TreeNode) -> int`\n\nReturn a single integer — the maximum path sum across all possible paths in the tree.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 30000,
+      "value_range": "-1000 <= node.val <= 1000",
+      "note": "The path must include at least one node. The answer is guaranteed to fit in a 32-bit integer."
+    },
+    "examples": [
+      {
+        "input": "root = [-10, 9, 20, null, null, 15, 7]",
+        "output": "42",
+        "explanation": "The optimal path is 15 → 20 → 7, giving a total of 15 + 20 + 7 = 42."
+      },
+      {
+        "input": "root = [-3]",
+        "output": "-3",
+        "explanation": "With a single node, the only path is the node itself, so the answer is -3."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For every pair of nodes (u, v), compute the sum along the unique path between them using LCA. Track the maximum. This is O(n^2) or O(n^3) and impractical for large trees, but conceptually demonstrates the problem.",
+        "code": "# Simplified brute force: try all root-to-node paths using DFS\n# Not guaranteed to find all paths (misses paths not through root)\n# This is a heuristic only — use optimal solution for correctness\ndef max_earning_path_brute(root):\n    best = [float('-inf')]\n    def all_paths(node, current_sum):\n        if node is None:\n            return\n        current_sum += node.val\n        best[0] = max(best[0], current_sum)\n        all_paths(node.left, current_sum)\n        all_paths(node.right, current_sum)\n        # Also restart path at each node\n        best[0] = max(best[0], node.val)\n        all_paths(node.left, node.val)\n        all_paths(node.right, node.val)\n    all_paths(root, 0)\n    return best[0]",
+        "time": "O(n^2) — for each node as start, O(n) traversal",
+        "space": "O(h) recursion stack"
+      },
+      "optimal": {
+        "approach": "Single DFS where each recursive call returns the best gain this subtree can contribute to a path extending upward (only one direction). At each node, we compute the best path passing through this node using both children's contributions (clamped to 0 to ignore loss-making subtrees). We track the global maximum across all such paths.",
+        "code": "def max_earning_path(root):\n    max_sum = [float('-inf')]\n\n    def gain(node):\n        if node is None:\n            return 0\n        # Clamp to 0: if a subtree contributes negative profit, skip it\n        left_gain = max(gain(node.left), 0)\n        right_gain = max(gain(node.right), 0)\n        # Best path through this node uses both children\n        path_here = node.val + left_gain + right_gain\n        max_sum[0] = max(max_sum[0], path_here)\n        # Return only one direction to the parent (can't fork upward)\n        return node.val + max(left_gain, right_gain)\n\n    gain(root)\n    return max_sum[0]",
+        "time": "O(n) — each node is visited exactly once",
+        "space": "O(h) for recursion stack where h is tree height"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "root = [-10, 9, 20, null, null, 15, 7]",
+        "expected": "42",
+        "is_visible": true
+      },
+      {
+        "input": "root = [-3]",
+        "expected": "-3",
+        "is_visible": true
+      },
+      {
+        "input": "root = [1, 2, 3]",
+        "expected": "6",
+        "is_visible": false
+      },
+      {
+        "input": "root = [-1, -2, -3]",
+        "expected": "-1",
+        "is_visible": false
+      },
+      {
+        "input": "root = [5, 4, 8, 11, null, 13, 4, 7, 2, null, null, null, 1]",
+        "expected": "48",
+        "is_visible": false
+      },
+      {
+        "input": "root = [2, -1, null]",
+        "expected": "2",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Google",
+      "Meta",
+      "Amazon",
+      "Microsoft"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "A path in a tree cannot split — once it goes into the left subtree it cannot also go into the right subtree and still connect to a parent. Think about what each recursive call should return to its caller.",
+      "At each node, you can use both left and right subtree contributions to form the locally best path (which updates the global answer), but you can only pass one direction upward to the parent.",
+      "Clamp subtree contributions to zero using `max(gain(child), 0)` — if a subtree gives negative profit, it's better to not include it in the path at all."
+    ]
+  }
+]

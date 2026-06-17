@@ -1,0 +1,276 @@
+[
+  {
+    "id": "cp_ds_arrays_1",
+    "title": "Harvest Season: Maximum Produce in a Window",
+    "difficulty": "easy",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "A farmer records the daily produce (in kg) from his field over `n` days. He wants to ship produce in batches of exactly `k` consecutive days and needs to find the maximum total produce across any such batch.\n\nGiven an array `produce` of `n` integers representing daily yields, and an integer `k`, return the **maximum sum** of any contiguous subarray of length exactly `k`.\n\n**Function signature:**\n```python\ndef max_produce_window(produce: list[int], k: int) -> int:\n```",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "k_min": 1,
+      "k_max": "n",
+      "element_min": 0,
+      "element_max": 10000,
+      "note": "1 <= k <= n <= 100000; 0 <= produce[i] <= 10000"
+    },
+    "examples": [
+      {
+        "input": "produce = [2, 1, 5, 1, 3, 2], k = 3",
+        "output": "9",
+        "explanation": "The windows of size 3 have sums [8, 7, 9, 6]; the maximum is 9 from the subarray [5, 1, 3]."
+      },
+      {
+        "input": "produce = [4, 4, 4, 4], k = 4",
+        "output": "16",
+        "explanation": "There is only one window of size 4 covering the entire array, with sum 16."
+      },
+      {
+        "input": "produce = [7], k = 1",
+        "output": "7",
+        "explanation": "Single-element array with k=1; the only window has sum 7."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For every starting index i from 0 to n-k, compute the sum of produce[i..i+k-1] using a nested loop. Track the maximum sum seen. This recalculates each window from scratch.",
+        "code": "def max_produce_window(produce, k):\n    n = len(produce)\n    max_sum = 0\n    for i in range(n - k + 1):\n        window_sum = 0\n        for j in range(i, i + k):\n            window_sum += produce[j]\n        max_sum = max(max_sum, window_sum)\n    return max_sum",
+        "time": "O(n*k)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Use a fixed sliding window. Compute the sum of the first k elements, then slide the window right by adding the incoming element and subtracting the outgoing element. This avoids recomputing the entire window sum on each step.",
+        "code": "def max_produce_window(produce, k):\n    n = len(produce)\n    # Build the first window\n    window_sum = sum(produce[:k])\n    max_sum = window_sum\n    # Slide: add right element, remove left element\n    for i in range(k, n):\n        window_sum += produce[i] - produce[i - k]\n        max_sum = max(max_sum, window_sum)\n    return max_sum",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "produce = [2, 1, 5, 1, 3, 2], k = 3",
+        "expected": "9",
+        "is_visible": true
+      },
+      {
+        "input": "produce = [4, 4, 4, 4], k = 4",
+        "expected": "16",
+        "is_visible": true
+      },
+      {
+        "input": "produce = [7], k = 1",
+        "expected": "7",
+        "is_visible": true
+      },
+      {
+        "input": "produce = [1, 2, 3, 4, 5], k = 1",
+        "expected": "5",
+        "is_visible": false
+      },
+      {
+        "input": "produce = [0, 0, 0, 0, 10], k = 2",
+        "expected": "10",
+        "is_visible": false
+      },
+      {
+        "input": "produce = [100, 200, 300, 400, 500], k = 3",
+        "expected": "1200",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "TCS",
+      "Infosys",
+      "Wipro",
+      "Amazon"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Think about how the sum changes as the window moves one step to the right — only one element is added and one is removed.",
+      "Compute the sum of the first k elements, then update it in O(1) per step: new_sum = old_sum + produce[right] - produce[right - k].",
+      "Initialize window_sum = sum(produce[:k]) and max_sum = window_sum, then loop from index k to n-1 updating both."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_2",
+    "title": "Delivery Route Segments: Count Subarrays with Target Distance Sum",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "A logistics company records the distance (in km) covered during each segment of a delivery route. Some segments may have negative adjustments (backtracking or rerouting). Given the list of `n` segment distances, count the total number of contiguous subarrays whose distances sum to exactly `target`.\n\nGiven an integer array `distances` and an integer `target`, return the **count of contiguous subarrays** with sum equal to `target`.\n\n**Function signature:**\n```python\ndef count_route_segments(distances: list[int], target: int) -> int:\n```",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "element_min": -10000,
+      "element_max": 10000,
+      "target_min": -1000000000,
+      "target_max": 1000000000,
+      "note": "1 <= n <= 100000; -10000 <= distances[i] <= 10000; -10^9 <= target <= 10^9"
+    },
+    "examples": [
+      {
+        "input": "distances = [1, 2, 3, -2, 2], target = 5",
+        "output": "2",
+        "explanation": "The two subarrays summing to 5 are [2, 3] (indices 1-2) and [2, 3, -2, 2] (indices 1-4)."
+      },
+      {
+        "input": "distances = [3, 3, 3], target = 6",
+        "output": "2",
+        "explanation": "Subarrays [3,3] appear at indices 0-1 and 1-2, both summing to 6."
+      },
+      {
+        "input": "distances = [5], target = 5",
+        "output": "1",
+        "explanation": "The only subarray is [5] itself, which equals the target."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Enumerate every pair of start and end indices using nested loops. For each pair, compute the subarray sum and check if it equals target. This correctly handles negative numbers but is too slow for large inputs.",
+        "code": "def count_route_segments(distances, target):\n    n = len(distances)\n    count = 0\n    for i in range(n):\n        curr_sum = 0\n        for j in range(i, n):\n            curr_sum += distances[j]\n            if curr_sum == target:\n                count += 1\n    return count",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Use prefix sums with a hashmap. Maintain a running prefix sum. For each position, we need to count how many previous prefix sums equal (current_prefix - target). Store the frequency of each prefix sum seen so far in a hashmap, initialised with {0: 1} to handle subarrays starting from index 0.",
+        "code": "def count_route_segments(distances, target):\n    # prefix_count[s] = number of times prefix sum s has been seen\n    prefix_count = {0: 1}\n    prefix_sum = 0\n    count = 0\n    for dist in distances:\n        prefix_sum += dist\n        # We need prefix_sum - target to have appeared before\n        needed = prefix_sum - target\n        count += prefix_count.get(needed, 0)\n        # Record current prefix sum\n        prefix_count[prefix_sum] = prefix_count.get(prefix_sum, 0) + 1\n    return count",
+        "time": "O(n)",
+        "space": "O(n)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "distances = [1, 2, 3, -2, 2], target = 5",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "distances = [3, 3, 3], target = 6",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "distances = [5], target = 5",
+        "expected": "1",
+        "is_visible": true
+      },
+      {
+        "input": "distances = [1, -1, 1, -1, 1], target = 0",
+        "expected": "6",
+        "is_visible": false
+      },
+      {
+        "input": "distances = [-1, -2, -3], target = -3",
+        "expected": "2",
+        "is_visible": false
+      },
+      {
+        "input": "distances = [1, 2, 3], target = 10",
+        "expected": "0",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "Google"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "A brute-force with two loops works but is O(n^2). Think about whether you can compute range sums faster using prefix sums.",
+      "If prefix[r] - prefix[l] = target, then prefix[l] = prefix[r] - target. For each position r, count how many earlier positions l have the needed prefix sum.",
+      "Use a hashmap mapping prefix_sum -> count. Initialise it with {0: 1} before iterating. At each step, look up (current_prefix_sum - target) in the map, then insert current_prefix_sum."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_3",
+    "title": "Warehouse Inventory Scan: Longest Subarray with At Most K Distinct Items",
+    "difficulty": "hard",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "A warehouse manager scans items on a conveyor belt. Each item has a type ID (integer). She wants to find the longest contiguous section of the belt that contains **at most `k` distinct item types**, so she can assign a limited team of specialists.\n\nGiven an integer array `items` representing item type IDs and an integer `k`, return the **length of the longest contiguous subarray** containing at most `k` distinct values.\n\n**Function signature:**\n```python\ndef longest_section(items: list[int], k: int) -> int:\n```",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "k_min": 1,
+      "k_max": 100000,
+      "element_min": 1,
+      "element_max": 100000,
+      "note": "1 <= n <= 100000; 1 <= k <= n; 1 <= items[i] <= 100000"
+    },
+    "examples": [
+      {
+        "input": "items = [1, 2, 1, 3, 2, 1], k = 2",
+        "output": "3",
+        "explanation": "With at most 2 distinct types, the longest valid subarray is [1, 2, 1] (indices 0-2, types {1,2}) of length 3. No valid subarray of length 4 exists with only 2 distinct types."
+      },
+      {
+        "input": "items = [4, 4, 4, 4], k = 1",
+        "output": "4",
+        "explanation": "The entire array contains only one distinct type (4), which satisfies k=1; the answer is 4."
+      },
+      {
+        "input": "items = [1, 2, 3], k = 3",
+        "output": "3",
+        "explanation": "The entire array has exactly 3 distinct types, satisfying at most k=3; the answer is 3."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Try every possible subarray using two nested loops. For each starting index, extend to the right while tracking distinct counts. Stop when distinct count exceeds k. This is O(n^2) and works correctly but times out on large inputs.",
+        "code": "def longest_section(items, k):\n    n = len(items)\n    max_len = 0\n    for i in range(n):\n        freq = {}\n        for j in range(i, n):\n            freq[items[j]] = freq.get(items[j], 0) + 1\n            if len(freq) > k:\n                break\n            max_len = max(max_len, j - i + 1)\n    return max_len",
+        "time": "O(n^2)",
+        "space": "O(k)"
+      },
+      "optimal": {
+        "approach": "Use a variable sliding window with a frequency hashmap. Expand the right pointer unconditionally. When the number of distinct types exceeds k, shrink the left pointer until we are back to at most k distinct types. Track the maximum window size seen.",
+        "code": "def longest_section(items, k):\n    freq = {}      # item_type -> count in current window\n    left = 0\n    max_len = 0\n    for right in range(len(items)):\n        # Expand window to include items[right]\n        freq[items[right]] = freq.get(items[right], 0) + 1\n        # Shrink from left while distinct types exceed k\n        while len(freq) > k:\n            freq[items[left]] -= 1\n            if freq[items[left]] == 0:\n                del freq[items[left]]\n            left += 1\n        # Window [left, right] now has at most k distinct types\n        max_len = max(max_len, right - left + 1)\n    return max_len",
+        "time": "O(n)",
+        "space": "O(k)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "items = [1, 2, 1, 3, 2, 1], k = 2",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "items = [4, 4, 4, 4], k = 1",
+        "expected": "4",
+        "is_visible": true
+      },
+      {
+        "input": "items = [1, 2, 3], k = 3",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "items = [1, 2, 3, 4, 5], k = 2",
+        "expected": "2",
+        "is_visible": false
+      },
+      {
+        "input": "items = [1, 1, 1, 2, 2, 3, 3, 3], k = 2",
+        "expected": "5",
+        "is_visible": false
+      },
+      {
+        "input": "items = [7], k = 1",
+        "expected": "1",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Google",
+      "Microsoft"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "A brute-force O(n^2) works: for each left boundary, extend right while distinct count <= k. Think about how to avoid restarting from scratch each time.",
+      "Try maintaining a sliding window [left, right]. Expand right freely; shrink left only when the number of distinct item types exceeds k.",
+      "Use a frequency hashmap: increment freq[items[right]] on expansion, decrement freq[items[left]] on shrink, and delete the key when its count hits 0. Window size is right - left + 1."
+    ]
+  }
+]

@@ -1,0 +1,267 @@
+[
+  {
+    "id": "cp_ds_hash_1",
+    "title": "Warehouse Item Tracker",
+    "difficulty": "easy",
+    "topic_id": "ds_hash",
+    "language": "python",
+    "problem_statement": "A warehouse manager receives a list of item IDs scanned during a daily audit. Your task is to return a dictionary mapping each unique item ID to the number of times it was scanned. Additionally, return the item ID that was scanned the most times. If multiple items share the maximum frequency, return the smallest item ID among them.\n\n**Function signature:**\n```python\ndef audit_report(scans: list[int]) -> tuple[dict, int]:\n```\nReturn a tuple `(freq_map, most_frequent_id)` where `freq_map` maps each item ID to its scan count.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": 1,
+      "value_max": 100000,
+      "note": "All item IDs are positive integers. The list is non-empty."
+    },
+    "examples": [
+      {
+        "input": "scans = [3, 1, 2, 3, 1, 3]",
+        "output": "({1: 2, 2: 1, 3: 3}, 3)",
+        "explanation": "Item 3 appears 3 times (the most), item 1 appears 2 times, and item 2 appears once, so the most-frequent ID is 3."
+      },
+      {
+        "input": "scans = [5]",
+        "output": "({5: 1}, 5)",
+        "explanation": "With only one scan, item 5 has frequency 1 and is trivially the most frequent."
+      },
+      {
+        "input": "scans = [2, 1, 2, 1]",
+        "output": "({2: 2, 1: 2}, 1)",
+        "explanation": "Both items 1 and 2 have frequency 2; the tie is broken by returning the smaller ID, which is 1."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For each unique item in the list, count its occurrences using a nested loop or list.count(). Then iterate over all unique items to find the one with the highest count (smallest ID on tie).",
+        "code": "def audit_report(scans):\n    unique = set(scans)\n    freq_map = {}\n    for item in unique:\n        freq_map[item] = scans.count(item)  # O(n) per item\n    max_freq = max(freq_map.values())\n    candidates = [k for k, v in freq_map.items() if v == max_freq]\n    return freq_map, min(candidates)",
+        "time": "O(n * u) where u = number of unique items; O(n^2) worst case",
+        "space": "O(u)"
+      },
+      "optimal": {
+        "approach": "Single pass: build the frequency map using dict.get(). Track the best (max_freq, min_id) pair as you go, updating whenever you find a higher frequency or equal frequency with a smaller ID.",
+        "code": "def audit_report(scans):\n    freq_map = {}\n    best_id = scans[0]\n    best_freq = 0\n    for item in scans:\n        freq_map[item] = freq_map.get(item, 0) + 1\n        f = freq_map[item]\n        # Update best: higher freq wins; tie goes to smaller ID\n        if f > best_freq or (f == best_freq and item < best_id):\n            best_freq = f\n            best_id = item\n    return freq_map, best_id",
+        "time": "O(n)",
+        "space": "O(u) where u = number of unique items"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "scans = [3, 1, 2, 3, 1, 3]",
+        "expected": "({1: 2, 2: 1, 3: 3}, 3)",
+        "is_visible": true
+      },
+      {
+        "input": "scans = [5]",
+        "expected": "({5: 1}, 5)",
+        "is_visible": true
+      },
+      {
+        "input": "scans = [2, 1, 2, 1]",
+        "expected": "({2: 2, 1: 2}, 1)",
+        "is_visible": true
+      },
+      {
+        "input": "scans = [7, 7, 7, 7]",
+        "expected": "({7: 4}, 7)",
+        "is_visible": false
+      },
+      {
+        "input": "scans = [4, 3, 2, 1]",
+        "expected": "({4: 1, 3: 1, 2: 1, 1: 1}, 1)",
+        "is_visible": false
+      },
+      {
+        "input": "scans = [10, 20, 10, 30, 20, 10, 30, 20, 10]",
+        "expected": "({10: 4, 20: 3, 30: 2}, 10)",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "TCS",
+      "Infosys",
+      "Wipro",
+      "Amazon"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Think about using a dictionary to count how many times each item appears — one loop over the list is enough.",
+      "As you increment the count for each item, compare it to your current best frequency to track the winner on the fly.",
+      "When there is a tie in frequency, the smaller item ID should win. Make sure your tie-breaking condition checks `item < best_id` when frequencies are equal."
+    ]
+  },
+  {
+    "id": "cp_ds_hash_2",
+    "title": "Delivery Route Segment Counter",
+    "difficulty": "medium",
+    "topic_id": "ds_hash",
+    "language": "python",
+    "problem_statement": "A logistics company records daily fuel consumption for each delivery stop as an integer array `fuel` (values can be negative if a stop replenishes fuel). A **route segment** is any contiguous subarray. Given a target fuel budget `k`, count the number of route segments whose total fuel consumption equals exactly `k`.\n\n**Function signature:**\n```python\ndef count_segments(fuel: list[int], k: int) -> int:\n```\nReturn the count of contiguous subarrays whose sum equals `k`.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": -1000,
+      "value_max": 1000,
+      "k_min": -1000000,
+      "k_max": 1000000,
+      "note": "Array values may be negative. k may be any integer in range."
+    },
+    "examples": [
+      {
+        "input": "fuel = [1, 2, 3], k = 3",
+        "output": "2",
+        "explanation": "The subarrays [1,2] (indices 0–1) and [3] (index 2) both sum to 3, giving a count of 2."
+      },
+      {
+        "input": "fuel = [1, -1, 1], k = 1",
+        "output": "3",
+        "explanation": "The three subarrays that sum to 1 are [1] at index 0, [1,-1,1] (full array), and [1] at index 2."
+      },
+      {
+        "input": "fuel = [5], k = 5",
+        "output": "1",
+        "explanation": "The only subarray is [5] itself, which equals k."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Enumerate all O(n^2) subarrays using two nested loops. For each starting index i, accumulate the sum as j increases and count whenever the sum equals k.",
+        "code": "def count_segments(fuel, k):\n    count = 0\n    n = len(fuel)\n    for i in range(n):\n        total = 0\n        for j in range(i, n):\n            total += fuel[j]\n            if total == k:\n                count += 1\n    return count",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Use prefix sums with a hash map. If prefix[j] - prefix[i] == k, then the subarray from i+1 to j sums to k. Initialize the map with {0: 1} to handle subarrays starting at index 0. For each new prefix sum, add map.get(prefix - k, 0) to the count, then record the current prefix sum.",
+        "code": "def count_segments(fuel, k):\n    count = 0\n    prefix = 0\n    # {0:1} handles subarrays starting from index 0\n    prefix_count = {0: 1}\n    for val in fuel:\n        prefix += val\n        # subarrays ending here that sum to k\n        count += prefix_count.get(prefix - k, 0)\n        prefix_count[prefix] = prefix_count.get(prefix, 0) + 1\n    return count",
+        "time": "O(n)",
+        "space": "O(n)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "fuel = [1, 2, 3], k = 3",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "fuel = [1, -1, 1], k = 1",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "fuel = [5], k = 5",
+        "expected": "1",
+        "is_visible": true
+      },
+      {
+        "input": "fuel = [1, 1, 1], k = 2",
+        "expected": "2",
+        "is_visible": false
+      },
+      {
+        "input": "fuel = [-1, -1, 1, 1, 1], k = 0",
+        "expected": "2",
+        "is_visible": false
+      },
+      {
+        "input": "fuel = [3, 3, 3], k = 9",
+        "expected": "1",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Google",
+      "Meta",
+      "Microsoft"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "A brute-force O(n^2) solution works for small inputs — try enumerating all subarrays first to build intuition.",
+      "Think in terms of prefix sums: if the prefix sum up to index j minus the prefix sum up to index i equals k, then the subarray from i+1 to j has sum k.",
+      "Initialize your prefix-sum hash map with {0: 1} before the loop. This single entry handles all subarrays that start from index 0."
+    ]
+  },
+  {
+    "id": "cp_ds_hash_3",
+    "title": "Fleet Shift Scheduler",
+    "difficulty": "hard",
+    "topic_id": "ds_hash",
+    "language": "python",
+    "problem_statement": "A transport company has `n` drivers and `n` shifts. Each driver `i` has a preference list `pref[i]` — a list of shift IDs they are willing to work. A **valid assignment** pairs each driver with exactly one shift and each shift with exactly one driver (a perfect matching), subject to everyone only being assigned a shift from their preference list.\n\nHowever, rather than finding the full matching, the company wants a simpler metric first: for each shift ID `s` (from 1 to n), return the number of drivers who listed shift `s` in their preference list. This tells the scheduler which shifts are most in demand.\n\nGiven `n` and a 2-D list `pref` (1-indexed driver IDs, shift IDs are integers 1..n), return a list `demand` of length `n` where `demand[i]` is the count of drivers who listed shift `i+1` (i.e., demand is 1-indexed by shift, returned as a 0-indexed list).\n\n**Function signature:**\n```python\ndef shift_demand(n: int, pref: list[list[int]]) -> list[int]:\n```",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 1000,
+      "pref_length": "Each pref[i] has between 1 and n shift IDs (no duplicates within a driver's list). All shift IDs are in range [1, n].",
+      "note": "Drivers may share preferences. Return a list of length n."
+    },
+    "examples": [
+      {
+        "input": "n = 3, pref = [[1, 2], [2, 3], [1, 3]]",
+        "output": "[2, 2, 2]",
+        "explanation": "Shift 1 is listed by drivers 0 and 2 (count=2), shift 2 by drivers 0 and 1 (count=2), shift 3 by drivers 1 and 2 (count=2)."
+      },
+      {
+        "input": "n = 2, pref = [[1], [1]]",
+        "output": "[2, 0]",
+        "explanation": "Both drivers want shift 1 (count=2) and no driver wants shift 2 (count=0)."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "For each shift ID s from 1 to n, iterate over every driver's preference list and count how many drivers include s. This is O(n * total_preferences).",
+        "code": "def shift_demand(n, pref):\n    demand = []\n    for s in range(1, n + 1):\n        count = sum(1 for driver in pref if s in driver)\n        demand.append(count)\n    return demand",
+        "time": "O(n * P) where P = total number of preferences across all drivers",
+        "space": "O(n)"
+      },
+      "optimal": {
+        "approach": "Single pass over all preferences. Use a hash map (or direct array indexed by shift ID) to accumulate counts. For each driver's preference list, increment the count for each listed shift. Construct the result array at the end.",
+        "code": "def shift_demand(n, pref):\n    # Use a dict to count demand per shift ID\n    freq = {}\n    for driver_prefs in pref:\n        for shift in driver_prefs:\n            freq[shift] = freq.get(shift, 0) + 1\n    # Build result list for shifts 1..n (0-indexed output)\n    return [freq.get(s, 0) for s in range(1, n + 1)]",
+        "time": "O(P) where P = total number of preferences (sum of all pref[i] lengths)",
+        "space": "O(n)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "n = 3, pref = [[1, 2], [2, 3], [1, 3]]",
+        "expected": "[2, 2, 2]",
+        "is_visible": true
+      },
+      {
+        "input": "n = 2, pref = [[1], [1]]",
+        "expected": "[2, 0]",
+        "is_visible": true
+      },
+      {
+        "input": "n = 1, pref = [[1]]",
+        "expected": "[1]",
+        "is_visible": false
+      },
+      {
+        "input": "n = 4, pref = [[1, 2, 3, 4], [1], [2], [3]]",
+        "expected": "[2, 2, 2, 1]",
+        "is_visible": false
+      },
+      {
+        "input": "n = 3, pref = [[3], [3], [3]]",
+        "expected": "[0, 0, 3]",
+        "is_visible": false
+      },
+      {
+        "input": "n = 4, pref = [[2, 4], [1, 3], [2, 4], [1, 3]]",
+        "expected": "[2, 2, 2, 2]",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Microsoft",
+      "Infosys"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Think of the problem as a pure frequency-counting task: flatten all preference lists and count occurrences of each shift ID.",
+      "A single hash map keyed by shift ID, built in one pass over all preferences, gives you all the counts you need.",
+      "After building the frequency map, construct the output list by looking up each shift ID from 1 to n using dict.get(s, 0) to handle shifts that no driver listed."
+    ]
+  }
+]

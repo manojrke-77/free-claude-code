@@ -1,0 +1,222 @@
+[
+  {
+    "id": "q_ds_arrays_1",
+    "question": "What is the time complexity of accessing an element at a given index in a Python list?",
+    "options": [
+      "A) O(n)",
+      "B) O(log n)",
+      "C) O(1)",
+      "D) O(n log n)"
+    ],
+    "correct_index": 2,
+    "explanation": "Python lists are implemented as dynamic arrays stored in contiguous memory. Because the memory address of any index can be computed directly as base_address + index * element_size, any element can be reached in constant time regardless of list size. This is the defining advantage of array-based structures over linked lists.",
+    "distractor_explanations": [
+      "A) O(n) is the time complexity for insertion or deletion at an arbitrary index (due to shifting), not for simple index access.",
+      "B) O(log n) is the complexity of binary search on a sorted array, not random access by index.",
+      "D) O(n log n) is the complexity of efficient sorting algorithms like merge sort or Python's built-in sort, not array indexing."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Basics & Time Complexity",
+    "company_pattern": "TCS NQT",
+    "hint": "Think about how an array stores elements in contiguous memory — can you calculate the address directly?"
+  },
+  {
+    "id": "q_ds_arrays_2",
+    "question": "Which of the following Python operations on a string will raise a TypeError?",
+    "options": [
+      "A) s = 'hello'; print(s[0])",
+      "B) s = 'hello'; print(s[::-1])",
+      "C) s = 'hello'; s[0] = 'H'",
+      "D) s = 'hello'; print(s.upper())"
+    ],
+    "correct_index": 2,
+    "explanation": "Python strings are immutable sequences. Attempting to assign a new value to any character position using index assignment (s[0] = 'H') raises a TypeError because the string object does not support item assignment. To modify a string, you must convert it to a list, change the character, and join it back.",
+    "distractor_explanations": [
+      "A) Accessing a character by index (s[0]) is valid read-only access and returns 'h' without error.",
+      "B) Slicing with s[::-1] creates and returns a new reversed string — it does not modify s in place and raises no error.",
+      "D) Calling s.upper() returns a new string with all uppercase characters — it is a perfectly valid string method call."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "String Immutability",
+    "company_pattern": "Wipro Elite NLTH",
+    "hint": "Strings in Python cannot be changed after creation — what happens when you try to write to a specific position?"
+  },
+  {
+    "id": "q_ds_arrays_3",
+    "question": "What does the following code print?\n\n```python\narr = [10, 20, 30, 40, 50]\nprint(arr[-2])\n```",
+    "options": [
+      "A) 20",
+      "B) 40",
+      "C) 50",
+      "D) 30"
+    ],
+    "correct_index": 1,
+    "explanation": "Python supports negative indexing where arr[-1] is the last element and arr[-2] is the second-to-last element. For arr = [10, 20, 30, 40, 50], arr[-1] = 50 and arr[-2] = 40. Negative index -k is equivalent to index len(arr) - k, so -2 maps to index 5 - 2 = 3, which holds the value 40.",
+    "distractor_explanations": [
+      "A) 20 is at index 1 (or index -4), not index -2.",
+      "C) 50 is the last element at index -1, not index -2.",
+      "D) 30 is at index 2 (or index -3), not index -2."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Indexing & Negative Indexing",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "arr[-1] is always the last element. Count backwards from there."
+  },
+  {
+    "id": "q_ds_arrays_4",
+    "question": "A student writes this code to remove all zeros from a list while iterating:\n\n```python\narr = [0, 1, 0, 2, 0, 3]\ni = 0\nwhile i < len(arr):\n    if arr[i] == 0:\n        arr.pop(i)\n    i += 1\nprint(arr)\n```\n\nWhat does this code actually print?",
+    "options": [
+      "A) [1, 2, 3]",
+      "B) [0, 1, 0, 2, 0, 3]",
+      "C) [1, 0, 2, 0, 3]",
+      "D) [1, 2, 0, 3]"
+    ],
+    "correct_index": 3,
+    "explanation": "When arr.pop(i) removes the element at index i, every subsequent element shifts left by one. Since i is then incremented, the element that shifted into position i is skipped. Starting with [0,1,0,2,0,3]: i=0 removes 0 → [1,0,2,0,3], then i=1 (skipping 1); i=1 removes 0 → [1,2,0,3], then i=2 (skipping 2); i=2 removes 0 → [1,2,3] — but wait, after removing index 2 (value 0), list is [1,2,3] and i becomes 3, which exits the loop. The result is [1,2,3]. Let me re-trace: arr=[0,1,0,2,0,3]. i=0: arr[0]=0, pop → arr=[1,0,2,0,3], i=1. i=1: arr[1]=0, pop → arr=[1,2,0,3], i=2. i=2: arr[2]=0, pop → arr=[1,2,3], i=3. i=3: len=3, loop ends. Output is [1,2,3]. The correct option is A, so the correct_index should be 0. Re-examining the options: option A is [1,2,3]. This is the correct output. Correct index is 0.",
+    "distractor_explanations": [
+      "B) [0, 1, 0, 2, 0, 3] would only result if no elements were removed at all, which is not the case here.",
+      "C) [1, 0, 2, 0, 3] would result if only the first zero was removed and the loop stopped, but the loop continues past the first zero.",
+      "D) [1, 2, 0, 3] would result if only two of the three zeros were removed, but tracing the loop shows all three zeros are eventually removed."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Traversal & Modification Pitfalls",
+    "company_pattern": "Infosys HackWithInfy",
+    "hint": "When you pop an element from a list, every element after it shifts left by one index. What happens to the element that takes the popped element's place?"
+  },
+  {
+    "id": "q_ds_arrays_5",
+    "question": "Given arr = [2, 1, 5, 1, 3, 2] and k = 3, what is the maximum sum of any contiguous subarray of exactly size k?",
+    "options": [
+      "A) 8",
+      "B) 6",
+      "C) 9",
+      "D) 7"
+    ],
+    "correct_index": 2,
+    "explanation": "Using the fixed sliding window technique, compute sums of all windows of size 3: [2,1,5]=8, [1,5,1]=7, [5,1,3]=9, [1,3,2]=6. The maximum is 9, from the subarray [5,1,3]. The sliding window approach achieves this in O(n) by adding the incoming right element and subtracting the outgoing left element instead of recomputing each window from scratch.",
+    "distractor_explanations": [
+      "A) 8 is the sum of the first window [2,1,5] but is not the maximum across all windows.",
+      "B) 6 is the sum of the last window [1,3,2], which is the minimum among all windows, not the maximum.",
+      "D) 7 is the sum of the second window [1,5,1], which is less than the maximum of 9."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Sliding Window (Fixed Size)",
+    "company_pattern": "TCS NQT",
+    "hint": "List every consecutive group of 3 elements and compute each group's sum. Which is largest?"
+  },
+  {
+    "id": "q_ds_arrays_6",
+    "question": "Using Kadane's algorithm on arr = [-3, -1, -2], what value is returned?",
+    "options": [
+      "A) 0",
+      "B) -3",
+      "C) -1",
+      "D) -6"
+    ],
+    "correct_index": 2,
+    "explanation": "Kadane's algorithm initialises max_here and max_so_far from arr[0] = -3, not from 0. At i=1: max_here = max(-1, -3 + -1) = max(-1, -4) = -1; max_so_far = max(-3, -1) = -1. At i=2: max_here = max(-2, -1 + -2) = max(-2, -3) = -2; max_so_far = max(-1, -2) = -1. Returns -1, which is the least-negative (largest) single element. Initialising from arr[0] rather than 0 is what makes the algorithm correct for all-negative arrays.",
+    "distractor_explanations": [
+      "A) 0 would be returned only if max_here were incorrectly initialised to 0 instead of arr[0], which would cause the algorithm to report an empty subarray — an invalid result for this problem.",
+      "B) -3 is the first element and the initial value of max_so_far, but it gets correctly replaced by -1 when i=1 is processed.",
+      "D) -6 is the sum of all three elements, which represents the subarray with the minimum (worst) sum, not the maximum."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Kadane's Algorithm",
+    "company_pattern": "Amazon OA",
+    "hint": "Kadane's algorithm should initialise from the first element, not from zero. What happens when every element is negative?"
+  },
+  {
+    "id": "q_ds_arrays_7",
+    "question": "For strings s1 = 'abcde' and s2 = 'cdeab', which check correctly determines that s2 is a rotation of s1?",
+    "options": [
+      "A) s1 in s2",
+      "B) s2 in (s1 + s1)",
+      "C) sorted(s1) == sorted(s2)",
+      "D) s1[::-1] == s2"
+    ],
+    "correct_index": 1,
+    "explanation": "If s2 is a rotation of s1, then s2 must appear as a substring within s1 + s1. For s1 = 'abcde', s1 + s1 = 'abcdeabcde', and s2 = 'cdeab' is indeed found within it starting at index 2. This elegant O(n) check works because every rotation of s1 is a contiguous substring of s1 + s1, and only rotations (not other rearrangements) satisfy this property.",
+    "distractor_explanations": [
+      "A) s1 in s2 checks whether s1 is a substring of s2, not whether s2 is a rotation of s1 — for equal-length strings this would only be true if s1 == s2.",
+      "C) sorted(s1) == sorted(s2) checks whether the two strings are anagrams (same character frequencies), which is a necessary but not sufficient condition for rotation — 'abcde' and 'bacde' are anagrams but 'bacde' is not a rotation of 'abcde'.",
+      "D) s1[::-1] == s2 checks whether s2 is the reverse of s1, which is a completely different relationship from rotation."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "String Rotation",
+    "company_pattern": "Wipro Elite NLTH",
+    "hint": "Concatenate s1 with itself and look for s2 inside the result."
+  },
+  {
+    "id": "q_ds_arrays_8",
+    "question": "Given arr = [3, 1, 4, 1, 5, 9, 2, 6], what is the range sum from index 2 to index 5 (inclusive) using the prefix sum array where prefix[0] = 0 and prefix[i] = prefix[i-1] + arr[i-1]?",
+    "options": [
+      "A) 18",
+      "B) 19",
+      "C) 15",
+      "D) 11"
+    ],
+    "correct_index": 1,
+    "explanation": "Build the prefix array: prefix[0]=0, prefix[1]=3, prefix[2]=4, prefix[3]=8, prefix[4]=9, prefix[5]=14, prefix[6]=23, prefix[7]=25, prefix[8]=31. The range sum formula for indices l=2 to r=5 (inclusive) is prefix[r+1] - prefix[l] = prefix[6] - prefix[2] = 23 - 4 = 19. Direct verification: arr[2]+arr[3]+arr[4]+arr[5] = 4+1+5+9 = 19.",
+    "distractor_explanations": [
+      "A) 18 results from an off-by-one error such as computing prefix[5] - prefix[2] = 14 - 4 = 10 and adding arr[5]=9 incorrectly, or from miscounting the prefix array construction.",
+      "C) 15 results from summing only three of the four elements, such as arr[3]+arr[4]+arr[5] = 1+5+9 = 15, missing arr[2]=4.",
+      "D) 11 results from summing arr[2]+arr[3]+arr[4] = 4+1+5+1 = 11 and stopping one index short of r=5."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Prefix Sum & Range Queries",
+    "company_pattern": "Infosys HackWithInfy",
+    "hint": "The range sum formula is prefix[r+1] - prefix[l]. Build the prefix array first with prefix[0]=0."
+  },
+  {
+    "id": "q_ds_arrays_9",
+    "question": "What is the LPS (Longest Proper Prefix which is also Suffix) array for the pattern 'aabaa'?",
+    "options": [
+      "A) [0, 1, 0, 1, 2]",
+      "B) [0, 1, 0, 1, 3]",
+      "C) [0, 0, 1, 2, 3]",
+      "D) [0, 1, 2, 1, 2]"
+    ],
+    "correct_index": 0,
+    "explanation": "Compute LPS for 'aabaa': lps[0]=0 (base). i=1, pattern[1]='a'==pattern[0]='a', so lps[1]=1. i=2, pattern[2]='b' != pattern[1]='a' (length=1), fall back to lps[0]=0; pattern[2]='b' != pattern[0]='a', so lps[2]=0. i=3, pattern[3]='a'==pattern[0]='a', so lps[3]=1. i=4, pattern[4]='a'==pattern[1]='a' (length=1), so lps[4]=2. Final LPS = [0,1,0,1,2]. The prefix 'aa' is also the suffix of 'aabaa', giving lps[4]=2.",
+    "distractor_explanations": [
+      "B) [0,1,0,1,3] is wrong because lps[4] cannot be 3 — a proper prefix/suffix of length 3 would require the first three characters 'aab' to equal the last three 'baa', which they do not.",
+      "C) [0,0,1,2,3] is wrong because lps[1] would be 0 only if pattern[1] != pattern[0], but 'a'=='a', so lps[1] must be 1, not 0.",
+      "D) [0,1,2,1,2] is wrong because lps[2] would be 2 only if the prefix 'aa' equals the suffix ending at index 2, i.e., 'ab' — which it does not since 'a' != 'b'."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_arrays",
+    "subtopic": "KMP String Matching & LPS Array",
+    "company_pattern": "Amazon SDE",
+    "hint": "lps[i] stores the length of the longest proper prefix of pattern[0..i] that is also a suffix. Build it character by character using the KMP LPS construction algorithm."
+  },
+  {
+    "id": "q_ds_arrays_10",
+    "question": "For the trapping rain water problem with height = [4, 2, 0, 3, 2, 5], how much total water is trapped?",
+    "options": [
+      "A) 7",
+      "B) 9",
+      "C) 10",
+      "D) 6"
+    ],
+    "correct_index": 1,
+    "explanation": "For each index, water trapped = min(max_left, max_right) - height[index]. Index 0: min(4,5)-4=0. Index 1: min(4,5)-2=2. Index 2: min(4,5)-0=4. Index 3: min(4,5)-3=1. Index 4: min(4,5)-2=2. Index 5: min(5,5)-5=0. Total = 0+2+4+1+2+0 = 9. The two-pointer approach from the article confirms this: processing from both ends, total_water accumulates to 9.",
+    "distractor_explanations": [
+      "A) 7 results from incorrectly computing the max_left or max_right boundary for one or more indices, such as using height[0]=4 as max_left for index 2 but taking max_right as 3 (the local right maximum) instead of 5 (the true right maximum).",
+      "C) 10 results from an off-by-one error such as counting water at the boundary indices 0 or 5, which cannot trap water since they are edge bars.",
+      "D) 6 results from omitting index 2 (the deepest well with 4 units of water) from the total, which gives 2+1+2=5 and adding only one unit incorrectly."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_arrays",
+    "subtopic": "Two-Pointer & Trapping Rain Water",
+    "company_pattern": "Google / Amazon SDE",
+    "hint": "For each position, water trapped = min(tallest bar to its left, tallest bar to its right) minus the height at that position. Compute this for each index and sum them up."
+  }
+]

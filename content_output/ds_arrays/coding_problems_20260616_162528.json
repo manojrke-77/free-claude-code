@@ -1,0 +1,263 @@
+[
+  {
+    "id": "cp_ds_arrays_1",
+    "title": "Warehouse Inventory Tracker",
+    "difficulty": "easy",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "A warehouse manager keeps a list of item quantities. Your task is to find the **second highest quantity** in the list. If no distinct second highest exists (all quantities are the same), return the maximum quantity itself.\n\nGiven a list of integers `quantities`, return the second largest distinct value. If all elements are equal, return the single unique value.\n\n**Function signature:**\n```python\ndef second_largest_quantity(quantities: list[int]) -> int:\n```",
+    "constraints": {
+      "n_min": 2,
+      "n_max": 100000,
+      "value_min": 1,
+      "value_max": 1000000
+    },
+    "examples": [
+      {
+        "input": "quantities = [10, 5, 20, 8, 20]",
+        "output": "10",
+        "explanation": "The distinct values are {5, 8, 10, 20}. The largest is 20 and the second largest is 10."
+      },
+      {
+        "input": "quantities = [7, 7, 7]",
+        "output": "7",
+        "explanation": "All values are equal, so there is no distinct second largest; return the maximum value 7."
+      },
+      {
+        "input": "quantities = [3, 1]",
+        "output": "1",
+        "explanation": "Two distinct values: largest is 3, second largest is 1."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Sort the list in descending order and scan for the first value that is strictly less than the maximum. If none found, return the maximum. Sorting takes O(n log n).",
+        "code": "def second_largest_quantity(quantities):\n    sorted_q = sorted(set(quantities), reverse=True)\n    # If only one distinct value, return it\n    if len(sorted_q) == 1:\n        return sorted_q[0]\n    return sorted_q[1]",
+        "time": "O(n log n)",
+        "space": "O(n)"
+      },
+      "optimal": {
+        "approach": "Single pass: maintain `first` (max) and `second` (second max). Update both as we iterate. This avoids sorting entirely.",
+        "code": "def second_largest_quantity(quantities):\n    first = second = float('-inf')\n    for q in quantities:\n        if q > first:\n            second = first  # old max becomes second\n            first = q\n        elif q > second and q != first:\n            second = q\n    # If no distinct second found, return first\n    return second if second != float('-inf') else first",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "quantities = [10, 5, 20, 8, 20]",
+        "expected": "10",
+        "is_visible": true
+      },
+      {
+        "input": "quantities = [7, 7, 7]",
+        "expected": "7",
+        "is_visible": true
+      },
+      {
+        "input": "quantities = [3, 1]",
+        "expected": "1",
+        "is_visible": false
+      },
+      {
+        "input": "quantities = [1, 2, 3, 4, 5]",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "quantities = [100, 100, 99]",
+        "expected": "99",
+        "is_visible": false
+      },
+      {
+        "input": "quantities = [1000000, 999999, 1000000]",
+        "expected": "999999",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "TCS",
+      "Infosys",
+      "Wipro"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Think about tracking two variables as you walk through the list once — one for the current maximum and one for the best value seen so far that is strictly less than the maximum.",
+      "When you find a new maximum, the old maximum naturally becomes a candidate for the second position. Update both variables in the right order.",
+      "After the loop, if `second` was never updated (all elements equal), fall back to returning `first`."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_2",
+    "title": "Fleet Range Query Optimizer",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "A logistics company tracks daily fuel consumption (in liters) for each of their `n` trucks as an array `fuel`. They receive `q` queries, each asking for the **total fuel consumed** by trucks with indices from `l` to `r` (inclusive, 0-indexed).\n\nAdditionally, before queries are answered, there may be **range update operations**: add a constant value `v` to every element from index `l` to `r` inclusive (simulating a bulk refuel adjustment).\n\nGiven the initial `fuel` array, a list of update operations, and a list of queries, return the answer to each query **after all updates have been applied**.\n\n**Function signature:**\n```python\ndef fleet_queries(fuel: list[int], updates: list[tuple], queries: list[tuple]) -> list[int]:\n```\n- Each update is a tuple `(l, r, v)`: add `v` to all elements from index `l` to `r`.\n- Each query is a tuple `(l, r)`: return the sum of elements from index `l` to `r`.\n- Apply **all updates first**, then answer **all queries**.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "q_min": 1,
+      "q_max": 100000,
+      "value_min": 0,
+      "value_max": 10000,
+      "v_min": -10000,
+      "v_max": 10000,
+      "l_min": 0,
+      "r_max": "n-1"
+    },
+    "examples": [
+      {
+        "input": "fuel = [3, 1, 4, 1, 5], updates = [(1, 3, 2)], queries = [(0, 4), (1, 3)]",
+        "output": "[20, 12]",
+        "explanation": "After adding 2 to indices 1–3, fuel becomes [3,3,6,3,5]. Query(0,4)=3+3+6+3+5=20; Query(1,3)=3+6+3=12."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Apply each update by iterating over the range and adding `v` to each element — O(n) per update. Answer each query by iterating over the range and summing — O(n) per query. Total: O(n*(U+Q)) where U=updates, Q=queries.",
+        "code": "def fleet_queries(fuel, updates, queries):\n    arr = fuel[:]\n    for l, r, v in updates:\n        for i in range(l, r + 1):\n            arr[i] += v\n    results = []\n    for l, r in queries:\n        results.append(sum(arr[l:r+1]))\n    return results",
+        "time": "O(n * (U + Q))",
+        "space": "O(n)"
+      },
+      "optimal": {
+        "approach": "Use a difference array for O(1) range updates. After applying all updates, reconstruct the array in O(n). Then build a prefix sum array for O(1) per query. Total: O(n + U + Q).",
+        "code": "def fleet_queries(fuel, updates, queries):\n    n = len(fuel)\n    # Step 1: difference array for range updates\n    diff = [0] * (n + 1)\n    for l, r, v in updates:\n        diff[l] += v\n        diff[r + 1] -= v\n    # Step 2: reconstruct updated array\n    arr = fuel[:]\n    running = 0\n    for i in range(n):\n        running += diff[i]\n        arr[i] += running\n    # Step 3: build prefix sum\n    prefix = [0] * (n + 1)\n    for i in range(n):\n        prefix[i + 1] = prefix[i] + arr[i]\n    # Step 4: answer queries in O(1) each\n    return [prefix[r + 1] - prefix[l] for l, r in queries]",
+        "time": "O(n + U + Q)",
+        "space": "O(n)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "fuel = [3, 1, 4, 1, 5], updates = [(1, 3, 2)], queries = [(0, 4), (1, 3)]",
+        "expected": "[20, 12]",
+        "is_visible": true
+      },
+      {
+        "input": "fuel = [5], updates = [], queries = [(0, 0)]",
+        "expected": "[5]",
+        "is_visible": true
+      },
+      {
+        "input": "fuel = [1, 2, 3, 4, 5], updates = [(0, 4, 10)], queries = [(0, 4), (2, 4)]",
+        "expected": "[65, 42]",
+        "is_visible": false
+      },
+      {
+        "input": "fuel = [10, 20, 30], updates = [(0, 1, -5), (1, 2, 3)], queries = [(0, 2), (0, 0), (2, 2)]",
+        "expected": "[56, 5, 33]",
+        "is_visible": false
+      },
+      {
+        "input": "fuel = [0, 0, 0, 0], updates = [(0, 3, 7), (1, 2, -3)], queries = [(0, 3), (1, 2)]",
+        "expected": "[22, 8]",
+        "is_visible": false
+      },
+      {
+        "input": "fuel = [100, 200, 300, 400, 500], updates = [], queries = [(1, 3), (0, 4)]",
+        "expected": "[900, 1500]",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "TCS",
+      "Infosys"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "Applying each update by looping over every index in the range is too slow for large inputs. Think about how you could record a range update using only two array writes.",
+      "A difference array stores the 'change' at each boundary: `diff[l] += v` and `diff[r+1] -= v`. A single prefix-sum pass converts this back to per-element values.",
+      "Once you have the final array after all updates, build a prefix sum array so that any range sum query is answered in O(1) using `prefix[r+1] - prefix[l]`."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_3",
+    "title": "Network Packet Window Monitor",
+    "difficulty": "hard",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "A network engineer monitors a stream of packet sizes represented as an integer array `packets`. She wants to find the **length of the longest contiguous subarray** where the number of **distinct packet sizes is at most K**.\n\nReturn this maximum length.\n\n**Function signature:**\n```python\ndef longest_window_at_most_k(packets: list[int], k: int) -> int:\n```\n\n**Notes:**\n- If `k >= number of distinct values in packets`, the entire array is a valid window.\n- If `k == 0`, return 0.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": 1,
+      "value_max": 100000,
+      "k_min": 0,
+      "k_max": 100000
+    },
+    "examples": [
+      {
+        "input": "packets = [1, 2, 1, 3, 4, 2, 3], k = 2",
+        "output": "3",
+        "explanation": "The longest window with at most 2 distinct values is [1,2,1] (length 3) or [2,3] or [3,4] — the maximum is 3."
+      },
+      {
+        "input": "packets = [5, 5, 5], k = 1",
+        "output": "3",
+        "explanation": "All elements are the same (one distinct value), so the entire array of length 3 is valid."
+      },
+      {
+        "input": "packets = [1, 2, 3], k = 0",
+        "output": "0",
+        "explanation": "k=0 means no distinct values allowed, so no valid subarray exists and the answer is 0."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check every subarray using two nested loops. For each (i, j) pair, count distinct elements and track the maximum length where distinct count <= k. O(n^2) time.",
+        "code": "def longest_window_at_most_k(packets, k):\n    if k == 0:\n        return 0\n    n = len(packets)\n    max_len = 0\n    for i in range(n):\n        seen = set()\n        for j in range(i, n):\n            seen.add(packets[j])\n            if len(seen) <= k:\n                max_len = max(max_len, j - i + 1)\n            else:\n                break\n    return max_len",
+        "time": "O(n^2)",
+        "space": "O(k)"
+      },
+      "optimal": {
+        "approach": "Variable sliding window with a frequency map. Expand `right` to add elements; when distinct count exceeds k, shrink from `left` until it is valid again. Each element is added and removed at most once, giving O(n) overall.",
+        "code": "from collections import defaultdict\n\ndef longest_window_at_most_k(packets, k):\n    if k == 0:\n        return 0\n    freq = defaultdict(int)\n    left = 0\n    max_len = 0\n    for right in range(len(packets)):\n        freq[packets[right]] += 1\n        # Shrink window until we have at most k distinct values\n        while len(freq) > k:\n            freq[packets[left]] -= 1\n            if freq[packets[left]] == 0:\n                del freq[packets[left]]\n            left += 1\n        max_len = max(max_len, right - left + 1)\n    return max_len",
+        "time": "O(n)",
+        "space": "O(k)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "packets = [1, 2, 1, 3, 4, 2, 3], k = 2",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "packets = [5, 5, 5], k = 1",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "packets = [1, 2, 3], k = 0",
+        "expected": "0",
+        "is_visible": true
+      },
+      {
+        "input": "packets = [1, 2, 1, 2, 3], k = 2",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "packets = [4, 4, 4, 4], k = 5",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "packets = [1, 2, 3, 4, 5], k = 3",
+        "expected": "3",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "Infosys"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "Brute force checks every subarray — think about whether you really need to restart from scratch for each left boundary, or if you can reuse information from the previous window.",
+      "A sliding window with a frequency dictionary lets you track exactly how many distinct values are in the current window. When the count exceeds k, move the left pointer rightward until it drops back to k.",
+      "When shrinking the window from the left, decrement the frequency of `packets[left]`. If it hits zero, delete the key from the dictionary — that is how you know the distinct count has decreased by one."
+    ]
+  }
+]

@@ -1,0 +1,222 @@
+[
+  {
+    "id": "q_ds_arrays_1",
+    "question": "What is the time complexity of accessing an element at a given index in an array?",
+    "options": [
+      "A) O(n)",
+      "B) O(log n)",
+      "C) O(1)",
+      "D) O(n²)"
+    ],
+    "correct_index": 2,
+    "explanation": "Arrays store elements in contiguous memory locations, so any element can be reached directly using the formula: base_address + index × element_size. This means no traversal is needed, making access O(1) regardless of array size.",
+    "distractor_explanations": [
+      "A) O(n) is the time to search for a value in an unsorted array, not to access by index — index-based access skips traversal entirely.",
+      "B) O(log n) is the time for binary search on a sorted array, which searches for a value, not accesses by index.",
+      "D) O(n²) applies to algorithms like bubble sort — no array access operation has quadratic time complexity."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Array Basics",
+    "company_pattern": "TCS NQT",
+    "hint": "Think about how the CPU computes the memory address given an index — does it need to look at other elements?"
+  },
+  {
+    "id": "q_ds_arrays_2",
+    "question": "In Python, which of the following correctly reverses a string `s` using slicing?",
+    "options": [
+      "A) s[0:-1]",
+      "B) s[::-1]",
+      "C) s[1:]",
+      "D) s[-1:0]"
+    ],
+    "correct_index": 1,
+    "explanation": "The slice `s[::-1]` uses a step of -1, which instructs Python to traverse the string from the last character to the first, effectively reversing it. This is the idiomatic one-liner for string reversal in Python.",
+    "distractor_explanations": [
+      "A) s[0:-1] returns all characters except the last one — it trims the string, not reverses it.",
+      "C) s[1:] returns all characters starting from index 1, simply dropping the first character.",
+      "D) s[-1:0] returns an empty string because with a default step of +1, Python cannot traverse backwards from index -1 to index 0."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Basic String Manipulation",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "Python slice syntax is s[start:stop:step]. What step value moves backward?"
+  },
+  {
+    "id": "q_ds_arrays_3",
+    "question": "Given arr = [2, 1, 5, 1, 3, 2] and k = 3, what is the maximum sum of any contiguous subarray of size k?",
+    "options": [
+      "A) 7",
+      "B) 8",
+      "C) 9",
+      "D) 6"
+    ],
+    "correct_index": 2,
+    "explanation": "Sliding the window of size 3 across the array gives sums: [2,1,5]=8, [1,5,1]=7, [5,1,3]=9, [1,3,2]=6. The maximum is 9, produced by the subarray [5,1,3].",
+    "distractor_explanations": [
+      "A) 7 is the sum of the second window [1,5,1] — a valid window sum, but not the maximum.",
+      "B) 8 is the sum of the first window [2,1,5] — another valid window sum, but the third window yields a higher value.",
+      "D) 6 is the sum of the last window [1,3,2] — the smallest of all window sums in this array."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "Sliding Window (Fixed)",
+    "company_pattern": "Wipro Elite",
+    "hint": "Compute the sum of every consecutive group of 3 elements and pick the largest."
+  },
+  {
+    "id": "q_ds_arrays_4",
+    "question": "Which of the following statements about Python strings is TRUE?",
+    "options": [
+      "A) Strings are mutable and can be modified in place using index assignment.",
+      "B) Concatenating strings in a loop with += is O(n) total.",
+      "C) Strings are immutable; to modify characters, you must convert to a list first.",
+      "D) String slicing s[i:j] returns a reference to the original string, not a new object."
+    ],
+    "correct_index": 2,
+    "explanation": "Python strings are immutable — once created, no character can be changed in place. Attempting `s[i] = 'x'` raises a TypeError. The correct approach is to convert to a list, modify the list, then rejoin with ''.join().",
+    "distractor_explanations": [
+      "A) This is false — Python strings are immutable, so `s[0] = 'a'` raises a TypeError at runtime.",
+      "B) This is false — each `+=` on a string creates a brand-new string object, making repeated concatenation O(n²) total, not O(n).",
+      "D) This is false — string slicing always creates a new string object in Python, it does not return a view or reference to the original."
+    ],
+    "difficulty": "beginner",
+    "topic_id": "ds_arrays",
+    "subtopic": "String Basics",
+    "company_pattern": "TCS NQT",
+    "hint": "Try running `s = 'hello'; s[0] = 'H'` in a Python interpreter and observe the result."
+  },
+  {
+    "id": "q_ds_arrays_5",
+    "question": "Consider the following Python code:\n\n```python\ndef kadane(arr):\n    max_here = arr[0]\n    max_so_far = arr[0]\n    for i in range(1, len(arr)):\n        max_here = max(arr[i], max_here + arr[i])\n        max_so_far = max(max_so_far, max_here)\n    return max_so_far\n\nprint(kadane([-3, -1, -2]))\n```\n\nWhat does this code print?",
+    "options": [
+      "A) 0",
+      "B) -3",
+      "C) -1",
+      "D) -6"
+    ],
+    "correct_index": 2,
+    "explanation": "Tracing the execution: max_here = max_so_far = -3. i=1: max_here = max(-1, -3+(-1)) = max(-1,-4) = -1; max_so_far = max(-3,-1) = -1. i=2: max_here = max(-2, -1+(-2)) = max(-2,-3) = -2; max_so_far = max(-1,-2) = -1. The function correctly returns -1, the largest single element in the all-negative array.",
+    "distractor_explanations": [
+      "A) 0 would be the result if max_here were initialized to 0 instead of arr[0] — that initialization bug causes incorrect output for all-negative arrays, but this correct implementation avoids it.",
+      "B) -3 is the first element and the initial value, but the algorithm correctly updates max_so_far to -1 after processing index 1.",
+      "D) -6 is the total sum of the entire array — Kadane's algorithm does not sum all elements; it picks the maximum subarray, which here is the single element [-1]."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Kadane's Algorithm",
+    "company_pattern": "Amazon SDE-1",
+    "hint": "Trace max_here and max_so_far step by step. Pay attention to how initializing from arr[0] handles all-negative arrays."
+  },
+  {
+    "id": "q_ds_arrays_6",
+    "question": "Given the sorted array arr = [1, 2, 3, 4, 6] and target = 6, a two-pointer approach starts with left=0 and right=4. Which sequence of pointer movements correctly finds the pair that sums to 6?",
+    "options": [
+      "A) Check arr[0]+arr[4]=7 > 6, move right to 3; check arr[0]+arr[3]=5 < 6, move left to 1; check arr[1]+arr[3]=6 = target — pair is (2,4).",
+      "B) Check arr[0]+arr[4]=7 > 6, move left to 1; check arr[1]+arr[4]=8 > 6, move left to 2; check arr[2]+arr[4]=9 > 6, no pair found.",
+      "C) Check arr[0]+arr[4]=7 > 6, move right to 3; check arr[0]+arr[3]=5 < 6, move right to 4; infinite loop.",
+      "D) Check arr[0]+arr[4]=7 < 6, move left to 1; check arr[1]+arr[4]=8 = target — pair is (2,6)."
+    ],
+    "correct_index": 0,
+    "explanation": "The two-pointer rule: if current_sum > target, decrement right (reduce the larger element); if current_sum < target, increment left (increase the smaller element). arr[0]+arr[4]=1+6=7>6 → right becomes 3. arr[0]+arr[3]=1+4=5<6 → left becomes 1. arr[1]+arr[3]=2+4=6=target → pair found: (2,4).",
+    "distractor_explanations": [
+      "B) Moving left when the sum exceeds the target is incorrect — when the sum is too large, we must decrease it by moving the right pointer leftward to a smaller value, not increase it by moving left rightward.",
+      "C) When current_sum < target, left should be incremented, not right — incrementing right when sum is already less than target would keep making the sum larger and skip valid pairs.",
+      "D) The comparison is reversed — arr[0]+arr[4]=1+6=7, which is greater than 6, not less than 6, so the sum is not 8 and the decision rule stated is factually wrong."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Two-Pointer Technique",
+    "company_pattern": "Infosys InfyTQ",
+    "hint": "When the sum of arr[left]+arr[right] exceeds the target, which pointer moves to make the sum smaller?"
+  },
+  {
+    "id": "q_ds_arrays_7",
+    "question": "For the prefix sum array built from arr = [3, 1, 4, 2, 5], what is the sum of elements from index 1 to index 3 (inclusive, 0-based) using the prefix sum formula?",
+    "options": [
+      "A) 5",
+      "B) 7",
+      "C) 9",
+      "D) 10"
+    ],
+    "correct_index": 1,
+    "explanation": "The prefix array is prefix = [0, 3, 4, 8, 10, 15], where prefix[i] = sum of arr[0] through arr[i-1]. Sum from index l=1 to r=3 = prefix[r+1] - prefix[l] = prefix[4] - prefix[1] = 10 - 3 = 7. Verification: arr[1]+arr[2]+arr[3] = 1+4+2 = 7.",
+    "distractor_explanations": [
+      "A) 5 equals arr[3]+arr[4]=2+5, which is the sum for indices 3 to 4, not indices 1 to 3.",
+      "C) 9 could stem from an off-by-one error: using prefix[4]-prefix[2] = 10-4 = 6, or incorrectly summing arr[2]+arr[3]+arr[4] = 4+2+5 = 11. Neither gives 9 — this is a plausible-looking arithmetic-error distractor.",
+      "D) 10 equals prefix[4]=sum of arr[0..3]=3+1+4+2=10, which is the sum from index 0 to 3, not index 1 to 3."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Prefix Sum",
+    "company_pattern": "Amazon SDE-1",
+    "hint": "Build prefix[] where prefix[0]=0 and prefix[i]=prefix[i-1]+arr[i-1]. Range sum arr[l..r] = prefix[r+1] - prefix[l]."
+  },
+  {
+    "id": "q_ds_arrays_8",
+    "question": "Consider the following code for the longest substring without repeating characters:\n\n```python\ndef solve(s):\n    char_index = {}\n    left = 0\n    max_len = 0\n    for right in range(len(s)):\n        char = s[right]\n        if char in char_index and char_index[char] >= left:\n            left = char_index[char] + 1\n        char_index[char] = right\n        max_len = max(max_len, right - left + 1)\n    return max_len\n\nprint(solve(\"abba\"))\n```\n\nWhat does this code print?",
+    "options": [
+      "A) 3",
+      "B) 1",
+      "C) 4",
+      "D) 2"
+    ],
+    "correct_index": 3,
+    "explanation": "Tracing 'abba': right=0 'a': not in map → char_index={'a':0}, max_len=1. right=1 'b': not in map → char_index={'a':0,'b':1}, max_len=2. right=2 'b': char_index['b']=1 >= left=0 → left=2; char_index['b']=2; window size=2-2+1=1, max_len remains 2. right=3 'a': char_index['a']=0, but 0 < left=2, so the guard prevents left from moving back; char_index['a']=3; window size=3-2+1=2, max_len=2. Final answer: 2.",
+    "distractor_explanations": [
+      "A) 3 would occur if the guard condition `char_index[char] >= left` were absent and left jumped backward to 1 when processing the second 'a' at index 3, incorrectly inflating the window to size 3.",
+      "B) 1 would be the result only if left were incorrectly advanced to match right at every character, shrinking the window to size 1 each time.",
+      "C) 4 would be the length of the entire string 'abba', which contains two repeated characters and therefore cannot be the length of a substring with all unique characters."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Sliding Window (Variable)",
+    "company_pattern": "Amazon SDE-1",
+    "hint": "The condition `char_index[char] >= left` prevents the left pointer from moving backward when a character was seen before the current window. Trace each step carefully."
+  },
+  {
+    "id": "q_ds_arrays_9",
+    "question": "An array arr = [1, 2, 3, 4, 5, 6, 7] is right-rotated by k=3 positions using the reversal algorithm. After Step 1 (reverse the entire array), Step 2 (reverse the first k=3 elements), and Step 3 (reverse the remaining n-k=4 elements), what is the final array?",
+    "options": [
+      "A) [3, 2, 1, 7, 6, 5, 4]",
+      "B) [5, 6, 7, 1, 2, 3, 4]",
+      "C) [4, 5, 6, 7, 1, 2, 3]",
+      "D) [7, 6, 5, 4, 3, 2, 1]"
+    ],
+    "correct_index": 1,
+    "explanation": "Step 1 — reverse entire array [1..7]: [7,6,5,4,3,2,1]. Step 2 — reverse first k=3 elements [7,6,5]: [5,6,7,4,3,2,1]. Step 3 — reverse remaining 4 elements [4,3,2,1]: [5,6,7,1,2,3,4]. A right rotation by 3 moves the last 3 elements [5,6,7] to the front, which matches [5,6,7,1,2,3,4].",
+    "distractor_explanations": [
+      "A) [3,2,1,7,6,5,4] results from reversing the first 3 and last 4 elements of the original array without first reversing the entire array — the order of operations is wrong.",
+      "C) [4,5,6,7,1,2,3] is the result of a left rotation by 3 (or equivalently right rotation by 4), not a right rotation by 3.",
+      "D) [7,6,5,4,3,2,1] is the state after Step 1 only — the result of reversing the entire array before Steps 2 and 3 are applied."
+    ],
+    "difficulty": "intermediate",
+    "topic_id": "ds_arrays",
+    "subtopic": "Rotation & Reversal",
+    "company_pattern": "TCS NQT",
+    "hint": "Apply the three reversals in order: (1) reverse all, (2) reverse first k, (3) reverse remaining. Track the array state after each step."
+  },
+  {
+    "id": "q_ds_arrays_10",
+    "question": "In the KMP algorithm, what does the LPS (Longest Prefix Suffix) array entry `lps[i]` represent, and what is the LPS array for the pattern \"AABAAB\"?",
+    "options": [
+      "A) lps[i] is the length of the longest proper prefix of pattern[0..i] that is also a suffix; LPS = [0, 1, 0, 1, 2, 3].",
+      "B) lps[i] is the number of mismatches up to position i; LPS = [0, 0, 1, 0, 0, 1].",
+      "C) lps[i] is the length of the longest proper prefix of pattern[0..i] that is also a suffix; LPS = [1, 2, 0, 1, 2, 3].",
+      "D) lps[i] is the index where the next comparison should restart after a mismatch; LPS = [0, 1, 0, 1, 2, 2]."
+    ],
+    "correct_index": 0,
+    "explanation": "lps[i] is the length of the longest proper prefix of pattern[0..i] that is also a suffix. For 'AABAAB': lps[0]='A'→0 (no proper prefix); lps[1]='AA'→1 (prefix 'A'=suffix 'A'); lps[2]='AAB'→0 (no proper prefix equals a suffix); lps[3]='AABA'→1 (prefix 'A'=suffix 'A'); lps[4]='AABAA'→2 (prefix 'AA'=suffix 'AA'); lps[5]='AABAAB'→3 (prefix 'AAB'=suffix 'AAB'). Result: [0,1,0,1,2,3].",
+    "distractor_explanations": [
+      "B) The LPS array tracks prefix-suffix match lengths, not mismatch counts — mismatch counting is not a concept used in KMP preprocessing, and the values [0,0,1,0,0,1] are factually incorrect for this pattern.",
+      "C) lps[0] is always 0 by definition because a single character has no proper prefix at all — the value 1 shown at lps[0] in this option violates the definition, making the entire array incorrect.",
+      "D) While the LPS array is used to determine restart positions, the values [0,1,0,1,2,2] are numerically wrong — lps[5] for 'AABAAB' is 3 (the prefix 'AAB' equals the suffix 'AAB'), not 2."
+    ],
+    "difficulty": "advanced",
+    "topic_id": "ds_arrays",
+    "subtopic": "String Matching (KMP)",
+    "company_pattern": "Amazon SDE-1",
+    "hint": "For each position i, manually check: what is the longest prefix of pattern[0..i] that also appears as a suffix? lps[0] is always 0."
+  }
+]

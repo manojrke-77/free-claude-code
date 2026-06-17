@@ -12,6 +12,7 @@ Usage:
     uv run advaita_agents/main.py roadmap            # Generate content roadmap
     uv run advaita_agents/main.py produce            # Produce content for TIER 1 topics
     uv run advaita_agents/main.py produce --topic-id ds_arrays  # Produce for one topic
+    uv run advaita_agents/main.py produce --topic-id ds_arrays --skip-checkpoints  # No human gates
     uv run advaita_agents/main.py gap                # Run gap analysis on published content
 """
 
@@ -65,7 +66,11 @@ if _MISSING_KEYS:
     print(f"\n   Update {_ENV_PATH} and re-run.")
     sys.exit(1)
 
-from advaita_agents.crew import create_content_production_crew  # noqa: E402
+from advaita_agents.crew import (  # noqa: E402
+    create_content_generation_crew,
+    create_reviewer_crew,
+    create_topic_strategy_crew,
+)
 from advaita_agents.taxonomy import (  # noqa: E402
     build_topic_map,
     compute_topic_score,
@@ -198,14 +203,18 @@ def cmd_roadmap() -> None:
             print(f"   [{t['score']:.1f}] {t['label']} ({t['id']})")
 
 
-def cmd_produce(topic_id: str | None = None, language: str = "python") -> None:
+def cmd_produce(
+    topic_id: str | None = None,
+    language: str = "python",
+    skip_checkpoints: bool = False,
+) -> None:
     """Run the Content Production Crew for topic(s).
 
     If topic_id is given, produce for that one topic.
     Otherwise, produce for all TIER 1 topics in the roadmap.
     """
     if topic_id:
-        _produce_topic(topic_id, language)
+        _produce_topic(topic_id, language, skip_checkpoints=skip_checkpoints)
     else:
         roadmap = load_json(ROADMAP_FILE)
         if not roadmap:
@@ -229,7 +238,7 @@ def cmd_produce(topic_id: str | None = None, language: str = "python") -> None:
             print(f"\n{'=' * 50}")
             print(f"  [{i}/{len(tier_1)}] {label}")
             print(f"{'=' * 50}")
-            _produce_topic(tid, language)
+            _produce_topic(tid, language, skip_checkpoints=skip_checkpoints)
 
 
 def _validate_task_outputs(
@@ -405,7 +414,8 @@ def _validate_task_outputs(
                     f"REVIEW: JSON is invalid — {exc}. Position {pos} context: "
                     f"'{snippet}'. Review output may be truncated or malformed."
                 )
-    else:
+    elif "review_report" in task_outputs:
+        # Review report key exists but is empty/None — only flag when expected
         errors.append(
             "REVIEW: No review report produced at all — Reviewer may have failed silently."
         )
@@ -535,10 +545,10 @@ def _validate_coding_solutions(
         # Include __import__ so solution code can use standard library modules
         # (e.g. collections.deque, collections.defaultdict, math.inf, heapq)
         import collections as _collections
-        import math as _math
+        import functools as _functools
         import heapq as _heapq
         import itertools as _itertools
-        import functools as _functools
+        import math as _math
 
         _allowed_modules = {
             "collections": _collections,
@@ -598,7 +608,7 @@ def _validate_coding_solutions(
 
         # ── Execute the solution code in the sandbox ──────────────────
         try:
-            exec(code, safe_namespace)  # noqa: S102  — sandboxed with restricted builtins
+            exec(code, safe_namespace)
         except Exception as exc:
             mismatches.append(f"{pid}: Solution code failed to compile/run: {exc}")
             continue
@@ -706,7 +716,7 @@ def _check_one_case(
         """Execute one line. Return True if it produced variables."""
         before = set(ns.keys())
         try:
-            exec(line, {}, ns)  # noqa: S102
+            exec(line, {}, ns)
             return True
         except SyntaxError:
             # Try splitting commas: "a = [1,2], b = 3" → "a = [1,2]" , "b = 3"
@@ -714,7 +724,7 @@ def _check_one_case(
             if len(parts) > 1:
                 for part in parts:
                     try:
-                        exec(part, {}, ns)  # noqa: S102
+                        exec(part, {}, ns)
                     except Exception:
                         return False
                 return len(ns) > len(before)
@@ -732,7 +742,7 @@ def _check_one_case(
         except ValueError, SyntaxError:
             # Last resort: exec as expression
             try:
-                bare_val = eval(input_str.strip(), {}, {})  # noqa: S307 — restricted
+                bare_val = eval(input_str.strip(), {}, {})
             except Exception as exc:
                 return (
                     f"{problem_id} {case_label}: Cannot parse input — {exc}. "
@@ -769,7 +779,7 @@ def _check_one_case(
     if actual != expected_val:
         return (
             f"{problem_id} {case_label}: MISMATCH — "
-            f"got {repr(actual)}, expected {expected_str!r}. "
+            f"got {actual!r}, expected {expected_str!r}. "
             f"Input: {input_str[:100]}"
         ), actual
 
@@ -826,10 +836,12 @@ def _produce_topic(
     difficulties: str | None = None,
     content_types: str | None = None,
     companies: str | None = None,
+    skip_checkpoints: bool = False,
 ) -> None:
     """Run content production for a single topic.
 
-    Captures ALL 5 task outputs individually (not just the final reviewer report).
+    Uses the split pipeline: Phase 1 (generation) → Checkpoint #1 →
+    Phase 2 (reviewer) → Checkpoint #2 → publish.
 
     Args:
         topic_id: Taxonomy topic ID (e.g. "ds_arrays") or custom ID.
@@ -839,6 +851,7 @@ def _produce_topic(
         difficulties: Comma-separated difficulty levels override.
         content_types: Comma-separated content types override.
         companies: Comma-separated company list override.
+        skip_checkpoints: If True, auto-approve both checkpoints (for CI/non-TTY).
     """
     topic_map = build_topic_map()
     topic = topic_map.get(topic_id)
@@ -875,8 +888,9 @@ def _produce_topic(
     num_quiz = 10 if "mcq" in content_types else 0
     num_coding = 3 if "coding" in content_types else 0
 
-    crew = create_content_production_crew()
-    result = crew.kickoff(
+    # ── Phase 1: Content Generation (4 agents, no Reviewer) ───────────────
+    gen_crew = create_content_generation_crew()
+    gen_result = gen_crew.kickoff(
         inputs={
             "topic_id": topic_id,
             "topic_label": label,
@@ -897,37 +911,32 @@ def _produce_topic(
 
     timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
-    # ── Extract ALL task outputs (not just the final one) ─────────────────
-    # CrewAI 1.6+ stores per-task outputs in result.tasks_output
-    task_outputs: dict[str, str | None] = {
-        "research_notes": None,
-        "article_content": None,
-        "quiz_content": None,
-        "coding_problems": None,
-        "review_report": None,
-    }
+    # ── Extract generation task outputs (research, article, quiz, coding) ──
+    gen_task_names = [
+        "research_notes",
+        "article_content",
+        "quiz_content",
+        "coding_problems",
+    ]
+    task_outputs: dict[str, str | None] = dict.fromkeys(gen_task_names)
 
-    task_names = list(task_outputs.keys())
-
-    tasks_raw_list = getattr(result, "tasks_output", None)
+    tasks_raw_list = getattr(gen_result, "tasks_output", None)
     if isinstance(tasks_raw_list, list) and tasks_raw_list:
         for i, task_output in enumerate(tasks_raw_list):
-            if i >= len(task_names):
+            if i >= len(gen_task_names):
                 break
             raw = (
                 str(task_output)
                 if task_output is None
                 else str(getattr(task_output, "raw", task_output))
             )
-            key = task_names[i]
+            key = gen_task_names[i]
             task_outputs[key] = raw
-            # Save individual file
             _save_task_output(topic_dir, key, raw, timestamp)
             print(f"[OK] {key} saved to {topic_dir / f'{key}_{timestamp}.json'}")
     else:
-        # Fallback: only final output available
-        raw = str(result) if result is not None else ""
-        task_outputs["review_report"] = raw
+        print("[ERROR] No tasks_output from generation crew — cannot continue.")
+        return
 
     # ── Validate task outputs (JSON structure, truncation, format compliance) ─
     validation_errors = _validate_task_outputs(task_outputs, num_quiz, num_coding)
@@ -938,13 +947,12 @@ def _produce_topic(
     else:
         print("\n[VALIDATE] Quiz and coding JSON outputs structurally valid.")
 
-    # ── Validate coding solutions against test cases ───────────────────────
+    # ── Auto-fix: validate coding solutions against test cases ─────────────
     if num_coding > 0 and task_outputs.get("coding_problems"):
         solution_errors, corrected_coding = _validate_coding_solutions(
             task_outputs["coding_problems"], fix=True
         )
         if solution_errors:
-            # Count actual errors (not auto-fix confirmation lines)
             actual_errors = [e for e in solution_errors if not e.startswith("  └─")]
             auto_fixes = [e for e in solution_errors if e.startswith("  └─")]
             print(
@@ -968,53 +976,93 @@ def _produce_topic(
 
         if corrected_coding:
             task_outputs["coding_problems"] = corrected_coding
-            # Re-save the corrected individual file
             _save_task_output(topic_dir, "coding_problems", corrected_coding, timestamp)
             print(
                 "   [AUTO-FIXED] Coding problems JSON updated with corrected "
                 "expected values."
             )
 
+    # ── Checkpoint #1: Human edits content before Reviewer ─────────────────
+    if not _human_checkpoint_pre_review(topic_dir, timestamp, skip_checkpoints):
+        print("[ABORT] Human chose to regenerate. Run the pipeline again.")
+        return
+
+    # Re-load content files (human may have edited them)
+    for key in gen_task_names:
+        filepath = topic_dir / f"{key}_{timestamp}.json"
+        if filepath.exists():
+            try:
+                data = json.loads(filepath.read_text(encoding="utf-8"))
+                # Unwrap {"raw_output": "..."} wrapper used for non-JSON content
+                if isinstance(data, dict) and list(data.keys()) == ["raw_output"]:
+                    task_outputs[key] = str(data["raw_output"])
+                else:
+                    task_outputs[key] = json.dumps(data, ensure_ascii=False)
+            except (json.JSONDecodeError, OSError) as exc:
+                print(f"  [WARN] Could not re-read {key}: {exc}")
+
+    # ── Phase 2: Reviewer (standalone, content embedded directly) ──────────
+    article_raw = task_outputs.get("article_content") or ""
+    quiz_raw = task_outputs.get("quiz_content") or ""
+    coding_raw = task_outputs.get("coding_problems") or ""
+
+    print("\n[PHASE 2] Running Reviewer (~$0.10)...")
+    print(f"  article: {len(article_raw):,} chars")
+    print(f"  quiz:    {len(quiz_raw):,} chars")
+    print(f"  coding:  {len(coding_raw):,} chars")
+
+    review_crew = create_reviewer_crew(
+        topic_id=topic_id,
+        topic_label=label,
+        article_raw=article_raw,
+        quiz_raw=quiz_raw,
+        coding_raw=coding_raw,
+    )
+    review_result = review_crew.kickoff()
+    review_raw = str(review_result) if review_result is not None else ""
+
+    task_outputs["review_report"] = review_raw
+    _save_task_output(topic_dir, "review_report", review_raw, timestamp)
+    print(
+        f"[OK] review_report saved to {topic_dir / f'review_report_{timestamp}.json'}"
+    )
+
+    # ── Parse Reviewer verdict ────────────────────────────────────────────
+    coverage_increment = 0.0
+    verdict = "unknown"
+    fixes: list[str] = []
+
+    try:
+        review_clean = _strip_double_braces(_strip_code_fences(review_raw))
+        review_json = json.loads(review_clean)
+        verdict = review_json.get("verdict", "unknown")
+        fixes = review_json.get("required_fixes", [])
+
+        if verdict == "approved":
+            coverage_increment = 1.0
+        elif verdict == "approved_with_minor_fixes":
+            coverage_increment = 0.85
+        else:
+            coverage_increment = 0.25  # rejected: partial credit for effort
+    except (json.JSONDecodeError, TypeError, AttributeError) as exc:
+        print(f"[WARN] Could not parse Reviewer JSON: {exc}")
+        verdict = "parse_error"
+        coverage_increment = 0.25
+
     # ── Save combined output ──────────────────────────────────────────────
     combined = {
         "topic_id": topic_id,
         "topic_label": label,
         "generated_at": datetime.now(UTC).isoformat(),
-        "research_notes": task_outputs["research_notes"],
-        "article_content": task_outputs["article_content"],
-        "quiz_content": task_outputs["quiz_content"],
-        "coding_problems": task_outputs["coding_problems"],
-        "review_report": task_outputs["review_report"],
+        "research_notes": task_outputs.get("research_notes"),
+        "article_content": task_outputs.get("article_content"),
+        "quiz_content": task_outputs.get("quiz_content"),
+        "coding_problems": task_outputs.get("coding_problems"),
+        "review_report": review_raw,
     }
     combined_path = topic_dir / f"combined_{timestamp}.json"
     save_json(combined_path, combined)
     print(f"[OK] Combined output saved to {combined_path}")
-
-    # ── Update published index ────────────────────────────────────────────
-    # Check if reviewer approved
-    coverage_increment = 0.0
-    if task_outputs["review_report"]:
-        review_raw = task_outputs["review_report"]
-        try:
-            review_clean = _strip_double_braces(_strip_code_fences(review_raw))
-            review_json = json.loads(review_clean)
-            verdict = review_json.get("verdict", "")
-            if verdict == "approved":
-                coverage_increment = 1.0
-            elif verdict == "approved_with_minor_fixes":
-                coverage_increment = 0.85
-            else:
-                coverage_increment = 0.25  # rejected: partial credit for effort
-        except json.JSONDecodeError, TypeError, AttributeError:
-            coverage_increment = 0.25
-
-    published = load_published_index()
-    published[topic_id] = round(
-        max(published.get(topic_id, 0.0), coverage_increment), 2
-    )
-    save_json(PUBLISHED_INDEX_FILE, published)
-
-    print(f"[DATA] Published index updated: {topic_id} = {published[topic_id]:.0%}")
 
     # ── Print summary of what was produced ────────────────────────────────
     print(f"\n[DATA] Production Summary for {label}:")
@@ -1023,18 +1071,173 @@ def _produce_topic(
         length = len(value) if value else 0
         print(f"   {status} {key}: {length} chars")
 
-    if task_outputs["review_report"]:
+    # ── Show Reviewer verdict ─────────────────────────────────────────────
+    print(f"\n[VERDICT] {verdict.upper()}")
+    if fixes:
+        print(f"[FIXES] {len(fixes)} required changes:")
+        for f in fixes[:5]:
+            print(f"   - {str(f)[:150]}")
+        if len(fixes) > 5:
+            print(f"   ... and {len(fixes) - 5} more")
+
+    # ── Checkpoint #2: Human sign-off on publication ──────────────────────
+    if not _human_checkpoint_post_review(
+        verdict, fixes, coverage_increment, skip_checkpoints
+    ):
+        print("[ABORT] Human rejected publication. Coverage not updated.")
+        return
+
+    # ── Update published index ────────────────────────────────────────────
+    published = load_published_index()
+    published[topic_id] = round(
+        max(published.get(topic_id, 0.0), coverage_increment), 2
+    )
+    save_json(PUBLISHED_INDEX_FILE, published)
+
+    print(f"[DATA] Published index updated: {topic_id} = {published[topic_id]:.0%}")
+
+
+def _checkpoint_print(*args, **kwargs) -> None:
+    """Print to the REAL stdout, bypassing CrewAI's monkey-patched sys.stdout.
+
+    CrewAI replaces sys.stdout with a wrapper that enforces cp1252 encoding
+    on Windows. This bypasses that for checkpoint prompts that need human input.
+    """
+    end = kwargs.get("end", "\n")
+    text = " ".join(str(a) for a in args) + end
+    sys.__stdout__.write(text)
+    sys.__stdout__.flush()
+
+
+def _checkpoint_input(prompt: str) -> str:
+    """Read input from the REAL stdin, bypassing any CrewAI redirection."""
+    _checkpoint_print(prompt, end="")
+    return sys.__stdin__.readline().strip().lower()
+
+
+def _human_checkpoint_pre_review(
+    topic_dir: Path, timestamp: str, skip_checkpoints: bool = False
+) -> bool:
+    """Checkpoint #1: Let human edit content files before the Reviewer runs.
+
+    Opens each content file for the human to inspect and fix surface errors
+    (typos, draft artifacts, duplicate examples, wrong distractor arithmetic).
+
+    Returns True if the human signals "ok" (content is ready for review),
+    False if they signal "regenerate" (discard and re-run the pipeline).
+    """
+    files_to_check = [
+        ("article", topic_dir / f"article_content_{timestamp}.json"),
+        ("quiz", topic_dir / f"quiz_content_{timestamp}.json"),
+        ("coding", topic_dir / f"coding_problems_{timestamp}.json"),
+    ]
+
+    _checkpoint_print()
+    _checkpoint_print("=" * 60)
+    _checkpoint_print("  [CHECKPOINT #1] Human Content Review")
+    _checkpoint_print("=" * 60)
+    _checkpoint_print()
+    _checkpoint_print("The content generation agents have finished. Open these files")
+    _checkpoint_print("and fix surface errors BEFORE the Reviewer evaluates them:")
+    _checkpoint_print()
+    for label, path in files_to_check:
+        exists = "[EXISTS]" if path.exists() else "[MISSING]"
+        _checkpoint_print(f"  {exists} {label}: {path}")
+    _checkpoint_print()
+    _checkpoint_print("Common things to fix (these take seconds for a human, but cost")
+    _checkpoint_print("the LLM Reviewer its entire token budget to flag):")
+    _checkpoint_print("  - Duplicate draft examples with inline corrections")
+    _checkpoint_print('  - "wait, verify:" self-correction artifacts in article text')
+    _checkpoint_print("  - Contradictory distractor arithmetic in MCQs")
+    _checkpoint_print("  - Typos and formatting issues")
+    _checkpoint_print("  - Inconsistent variable names in code snippets")
+    _checkpoint_print()
+    _checkpoint_print("After editing the files, type 'ok' to proceed to review,")
+    _checkpoint_print("or 'regenerate' to discard this run and re-generate.")
+
+    if skip_checkpoints or not sys.__stdin__.isatty():
+        if not sys.__stdin__.isatty():
+            _checkpoint_print(
+                "[CHECKPOINT] Non-interactive mode — auto-approved for review."
+            )
+        else:
+            _checkpoint_print(
+                "[CHECKPOINT] --skip-checkpoints set — auto-approved for review."
+            )
+        return True
+
+    while True:
         try:
-            review_raw_clean = _strip_code_fences(task_outputs["review_report"])
-            review = json.loads(_strip_double_braces(review_raw_clean))
-            print(f"\n[VERDICT] {review.get('verdict', 'unknown').upper()}")
-            fixes = review.get("required_fixes", [])
-            if fixes:
-                print(f"[FIXES] {len(fixes)} required changes:")
-                for f in fixes[:5]:
-                    print(f"   - {str(f)[:120]}...")
-        except json.JSONDecodeError, TypeError:
-            pass
+            response = _checkpoint_input("\n  [ok / regenerate]: ")
+        except EOFError, KeyboardInterrupt:
+            return False
+
+        if response == "ok":
+            _checkpoint_print("[CHECKPOINT] Human approved content for review.")
+            return True
+        if response in ("regenerate", "regen"):
+            _checkpoint_print("[CHECKPOINT] Human requested regeneration.")
+            return False
+        _checkpoint_print("  Type 'ok' or 'regenerate'.")
+
+
+def _human_checkpoint_post_review(
+    verdict: str,
+    fixes: list[str],
+    coverage_increment: float,
+    skip_checkpoints: bool = False,
+) -> bool:
+    """Checkpoint #2: Human sign-off on the Reviewer's verdict.
+
+    Shows the verdict and required fixes, lets the human decide whether
+    to publish at the Reviewer's coverage level or reject the content.
+
+    Returns True to publish, False to discard.
+    """
+    _checkpoint_print()
+    _checkpoint_print("=" * 60)
+    _checkpoint_print("  [CHECKPOINT #2] Reviewer Verdict Sign-off")
+    _checkpoint_print("=" * 60)
+    _checkpoint_print(f"  Verdict:  {verdict.upper()}")
+    _checkpoint_print(
+        f"  Coverage: {coverage_increment:.0%} (0.25=rejected, 0.85=minor_fixes, 1.0=approved)"
+    )
+    _checkpoint_print(f"  Fixes:    {len(fixes)} required")
+
+    if fixes:
+        _checkpoint_print("  Required fixes:")
+        for i, f in enumerate(fixes[:10]):
+            _checkpoint_print(f"    {i + 1}. {str(f)[:150]}")
+        if len(fixes) > 10:
+            _checkpoint_print(f"    ... and {len(fixes) - 10} more")
+
+    _checkpoint_print()
+    _checkpoint_print("Options:")
+    _checkpoint_print(
+        "  'publish' - Accept the verdict and apply coverage to published_index"
+    )
+    _checkpoint_print("  'reject'  - Discard this run (no coverage applied)")
+
+    if skip_checkpoints or not sys.__stdin__.isatty():
+        if not sys.__stdin__.isatty():
+            _checkpoint_print("[CHECKPOINT] Non-interactive mode — auto-publishing.")
+        else:
+            _checkpoint_print("[CHECKPOINT] --skip-checkpoints set — auto-publishing.")
+        return True
+
+    while True:
+        try:
+            response = _checkpoint_input("\n  [publish / reject]: ")
+        except EOFError, KeyboardInterrupt:
+            return False
+
+        if response in ("publish", "pub"):
+            _checkpoint_print("[CHECKPOINT] Human approved publication.")
+            return True
+        if response in ("reject", "rej"):
+            _checkpoint_print("[CHECKPOINT] Human rejected publication.")
+            return False
+        _checkpoint_print("  Type 'publish' or 'reject'.")
 
 
 def _save_task_output(
@@ -1235,7 +1438,7 @@ def cmd_gap() -> None:
     print(f"   [WARN] Stale Content:      {s['stale_content']}")
 
     if completely_missing:
-        print(f"\n[ERR] Top 10 missing topics by weight:")
+        print("\n[ERR] Top 10 missing topics by weight:")
         missing_sorted = sorted(
             completely_missing, key=lambda t: t["weight"], reverse=True
         )[:10]
@@ -1248,13 +1451,13 @@ def cmd_gap() -> None:
         needs_rewrite = [t for t in partial_coverage if t.get("needs_rewrite")]
         missing_types = [t for t in partial_coverage if t.get("missing_content_types")]
         if needs_rewrite:
-            print(f"\n[WARN] Topics needing rewrite (reviewer rejected):")
+            print("\n[WARN] Topics needing rewrite (reviewer rejected):")
             for t in needs_rewrite:
                 print(
                     f"   - {t['label']} ({t['topic_id']}) — coverage {t['coverage_pct']:.0%}"
                 )
         if missing_types:
-            print(f"\n[WARN] Topics missing content types:")
+            print("\n[WARN] Topics missing content types:")
             for t in missing_types:
                 print(
                     f"   - {t['label']} ({t['topic_id']}) — missing: {t['missing_content_types']}"
@@ -1287,15 +1490,18 @@ def main() -> None:
     elif command == "roadmap":
         cmd_roadmap()
     elif command == "produce":
-        # Check for --topic-id flag
+        # Check for flags
         topic_id = None
         language = "python"
+        skip_checkpoints = False
         for i, arg in enumerate(sys.argv[2:], start=2):
             if arg == "--topic-id" and i + 1 < len(sys.argv):
                 topic_id = sys.argv[i + 1]
             elif arg == "--language" and i + 1 < len(sys.argv):
                 language = sys.argv[i + 1]
-        cmd_produce(topic_id, language)
+            elif arg == "--skip-checkpoints":
+                skip_checkpoints = True
+        cmd_produce(topic_id, language, skip_checkpoints=skip_checkpoints)
     elif command == "gap":
         cmd_gap()
     else:

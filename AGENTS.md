@@ -42,9 +42,10 @@ for v in ("ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"):
 ```
 advaita_agents/
   main.py                  # CLI entry point (4 commands: roadmap, produce, interactive, gap)
-  crew.py                  # Crew assembly (TopicStrategyCrew, ContentProductionCrew)
+  crew.py                  # Crew assembly (TopicStrategyCrew, ContentGenerationCrew, ReviewerOnlyCrew, ContentProductionCrew [legacy])
   taxonomy.py              # 44-topic master taxonomy + scoring constants + utilities
   interactive.py           # 4-step interactive topic selection wizard
+  run_phase2.py            # Standalone Phase 2 runner (Reviewer only, against existing content)
   test_reviewer.py         # Isolated Reviewer test (~$0.10 vs $1.00 full pipeline)
   agents/
     content_agents.py      # 5 production agents (Research→Writer→Quiz→Coding→Reviewer)
@@ -60,17 +61,20 @@ advaita_agents/
 main.py commands
   ├─ roadmap  → TopicStrategyCrew → roadmap.json (AI-generated, via DeepSeek agent)
   │                                   roadmap_scored.json (lightweight fallback)
-  ├─ produce  → ContentProductionCrew → content_output/<topic_id>/{5 task outputs + combined JSON}
-  │                                   → published_index.json (updated with coverage %)
+  ├─ produce  → ContentGenerationCrew (4 agents) → auto-fix → ⏸ Checkpoint #1 (human edits)
+  │            → ReviewerOnlyCrew (1 agent) → ⏸ Checkpoint #2 (human sign-off)
+  │            → content_output/<topic_id>/{5 task outputs + combined JSON}
+  │            → published_index.json (updated with coverage %)
   ├─ gap      → local-only computation (NO API calls) → gap_report.json
   └─ interactive → taxonomy browser → delegates to _produce_topic()
 ```
 
-**Key data files** (repo root):
+**Key data files** (all paths relative to repo root — `main.py` resolves them from `Path(".")`):
 - `roadmap.json` / `roadmap_scored.json` — prioritized topic roadmap
 - `published_index.json` — `{topic_id: coverage_pct (0.0–1.0)}` — feeds gap analysis + roadmap scoring
 - `gap_report.json` — structured gap report (fully/partial/missing/stale topics)
-- `content_output/<topic_id>/` — per-topic output directory with 5 individual task JSONs + combined JSON
+- `content_output/<topic_id>/` — per-topic output directory with 6 JSONs per run: 5 individual task files (research_notes, article_content, quiz_content, coding_problems, review_report) + combined
+- Note: stale copies of `published_index.json` and `gap_report.json` may exist inside `advaita_agents/` — ignore those; the live ones are in the repo root
 
 ### Agent lineup
 
@@ -94,17 +98,28 @@ Each of the 44 leaf topics has: `id`, `label`, `weight` (1-10), `difficulties`, 
 
 Tier cutoffs: ≥7.0 = TIER 1, ≥4.5 = TIER 2, <4.5 = TIER 3.
 
-### Content production pipeline
+### Content production pipeline (split with human checkpoints)
 
-5 sequential tasks via CrewAI `Process.sequential`:
+The pipeline runs in two phases separated by human checkpoints:
 
+**Phase 1 — Content Generation** (4 agents, ~$0.95, via `create_content_generation_crew()`):
 1. **Research** (DeepSeek, max_iter=12) → web searches + scrapes → structured research notes
 2. **Writer** (Claude) → markdown article (beginner→intermediate→advanced structure)
 3. **Quiz Designer** (Claude) → JSON array of MCQs with distractors + explanations
 4. **Coding Problem Designer** (Claude) → JSON array of coding problems with test cases + solutions
-5. **Technical Reviewer** (Claude) → quality gate: verdict (approved/rejected) + numbered fix list
 
-The Reviewer is the quality bottleneck — it catches wrong test outputs, unverifiable claims, truncated code, and pedagogical issues. Task prompts contain explicit quality guardrails (e.g. banned percentages without cited sources, required manual test case verification). When rejected, `published_index.json` records partial coverage (0.25 for rejected, 0.85 for approved_with_minor_fixes, 1.0 for approved).
+Then auto-fix runs (`_validate_coding_solutions(fix=True)`) — sandbox execution corrects wrong expected test values.
+
+**⏸ Human Checkpoint #1** (`_human_checkpoint_pre_review`): Human opens 3 content files, fixes surface errors (duplicate drafts, self-correction artifacts, contradictory distractor arithmetic, typos), types 'ok' or 'regenerate'. Catches in seconds what costs the LLM Reviewer its whole token budget to flag.
+
+**Phase 2 — Reviewer** (1 agent, ~$0.10, via `create_reviewer_crew()`):
+5. **Technical Reviewer** (Claude) — receives content embedded directly in task description (no CrewAI context chaining). Quality gate: verdict (approved/rejected) + numbered fix list.
+
+**⏸ Human Checkpoint #2** (`_human_checkpoint_post_review`): Human reads verdict + fixes, types 'publish' or 'reject'. Prevents low-quality content from auto-accumulating in `published_index.json`.
+
+Coverage mapping: `verdict=rejected → 0.25`, `approved_with_minor_fixes → 0.85`, `approved → 1.0`.
+
+The old monolithic `create_content_production_crew()` (5 agents in one kickoff) is still available for backward compatibility but the split pipeline is the default.
 
 ### Quality guardrail system
 
@@ -157,7 +172,7 @@ Validation errors are printed but don't block the combined save — they surface
 
 **`_save_task_output()` wrapping:** When a raw task output fails `json.loads()`, it's wrapped as `{"raw_output": "<original text>"}`. This means individual task JSON files (e.g. `review_report_*.json`) have a different shape than the combined JSON (where all values are raw strings). Always parse individual task outputs defensively: try `json.loads()` first, then access `data.get("raw_output", data)` if it doesn't match expectations.
 
-**Code fence parsing in verdict/coverage paths:** The Reviewer wraps its output in ` ```json ... ``` ` fences. Both verdict-reading code paths (coverage increment at ~line 938 and verdict print at ~line 968) must chain `_strip_code_fences()` then `_strip_double_braces()` before `json.loads()`. The `_validate_task_outputs()` path at line 375 already chains them correctly. Run 19 revealed both verdict paths were missing `_strip_code_fences()`, causing silent JSON parse failures that masked the Reviewer's `rejected` verdict (fell to `except → coverage_increment = 0.25`, but `max(old_0.85, 0.25) = 0.85` hid it). Fixed by adding `_strip_code_fences()` to both paths.
+**Code fence parsing in verdict/coverage paths:** The Reviewer wraps its output in ` ```json ... ``` ` fences. The single verdict-reading code path (in `_produce_topic()`) must chain `_strip_code_fences()` then `_strip_double_braces()` before `json.loads()`. The `_validate_task_outputs()` path also chains them correctly. Run 19 revealed a missing `_strip_code_fences()` call, causing silent JSON parse failures that masked the Reviewer's `rejected` verdict (fell to `except → coverage_increment = 0.25`, but `max(old_0.85, 0.25) = 0.85` hid it). Both paths now chain both functions correctly.
 
 ### Fix-cycle: automated solution validation + auto-correction
 
@@ -220,7 +235,7 @@ The old `FINAL OUTPUT RULE` said "read this last — it overrides everything abo
 - Extracts verdict, content types found, and generation date from actual files
 - Cross-references against `published_index.json` and the 44-topic taxonomy
 - Classifies as: fully_covered, partial_coverage (incomplete/missing types/rejected), completely_missing, stale (>365 days)
-- `main.py` no longer imports `create_topic_strategy_crew` — gap analysis is fully offline
+- Gap analysis is fully offline — no API calls, pure local computation against taxonomy + content_output + published_index
 
 ### Run commands
 
@@ -232,6 +247,7 @@ uv run python advaita_agents/main.py produce               # produce all TIER 1 
 uv run python advaita_agents/main.py interactive           # interactive wizard
 uv run python advaita_agents/main.py gap                   # gap analysis (local, instant)
 uv run python advaita_agents/test_reviewer.py              # isolated Reviewer test (~$0.10, no full pipeline)
+uv run python advaita_agents/run_phase2.py [timestamp]      # re-run Reviewer against existing Phase 1 content
 ```
 
 ## CODING ENVIRONMENT

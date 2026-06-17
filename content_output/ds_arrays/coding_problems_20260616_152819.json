@@ -1,0 +1,262 @@
+[
+  {
+    "id": "cp_ds_arrays_1",
+    "title": "Warehouse Inventory Peak Finder",
+    "difficulty": "easy",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA warehouse manager tracks daily inventory levels over `n` days. She needs to find the **maximum** and **minimum** inventory recorded, as well as the **range** (max - min) to plan restocking.\n\nGiven an array `inventory` of `n` integers representing daily inventory counts, return a list `[max_val, min_val, range_val]` where `range_val = max_val - min_val`.\n\n### Function Signature\n```python\ndef warehouse_stats(inventory: list[int]) -> list[int]:\n```\n\n### Input\n- A single line containing `n` space-separated integers representing `inventory`.\n\n### Output\n- Three space-separated integers: `max_val min_val range_val`.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": -10000,
+      "value_max": 10000,
+      "time_limit": "O(n)",
+      "space_limit": "O(1) extra"
+    },
+    "examples": [
+      {
+        "input": "inventory = [4, 7, 2, 9, 1, 5]",
+        "output": "[9, 1, 8]",
+        "explanation": "The maximum is 9, the minimum is 1, and the range is 9 - 1 = 8."
+      },
+      {
+        "input": "inventory = [-3]",
+        "output": "[-3, -3, 0]",
+        "explanation": "With a single element, max and min are both -3, so the range is 0."
+      },
+      {
+        "input": "inventory = [5, 5, 5, 5]",
+        "output": "[5, 5, 0]",
+        "explanation": "All elements are equal, so max equals min and the range is 0."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Sort the array. The minimum is the first element and the maximum is the last. Time: O(n log n) due to sorting. Space: O(1) or O(n) depending on sort implementation. This is worse than necessary since a single scan suffices.",
+        "code": "def warehouse_stats(inventory):\n    # Sort and read endpoints\n    sorted_inv = sorted(inventory)\n    min_val = sorted_inv[0]\n    max_val = sorted_inv[-1]\n    return [max_val, min_val, max_val - min_val]",
+        "time": "O(n log n)",
+        "space": "O(n)"
+      },
+      "optimal": {
+        "approach": "Single pass: initialise both max and min to the first element, then update them as we scan. This handles negative values and single-element arrays correctly without sorting.",
+        "code": "def warehouse_stats(inventory):\n    max_val = inventory[0]  # initialise to first element, not 0\n    min_val = inventory[0]  # handles all-negative arrays correctly\n\n    for i in range(1, len(inventory)):\n        if inventory[i] > max_val:\n            max_val = inventory[i]\n        if inventory[i] < min_val:\n            min_val = inventory[i]\n\n    return [max_val, min_val, max_val - min_val]",
+        "time": "O(n)",
+        "space": "O(1)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "[4, 7, 2, 9, 1, 5]",
+        "expected": "[9, 1, 8]",
+        "is_visible": true
+      },
+      {
+        "input": "[-3]",
+        "expected": "[-3, -3, 0]",
+        "is_visible": true
+      },
+      {
+        "input": "[5, 5, 5, 5]",
+        "expected": "[5, 5, 0]",
+        "is_visible": true
+      },
+      {
+        "input": "[-10, -3, -7, -1, -5]",
+        "expected": "[-1, -10, 9]",
+        "is_visible": false
+      },
+      {
+        "input": "[0, 10000, -10000, 0]",
+        "expected": "[10000, -10000, 20000]",
+        "is_visible": false
+      },
+      {
+        "input": "[42, 42]",
+        "expected": "[42, 42, 0]",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "TCS",
+      "Infosys",
+      "Wipro"
+    ],
+    "round_type": "OA",
+    "hints": [
+      "Think about what starting value makes sense for max_val and min_val — using 0 will fail if all numbers are negative.",
+      "You only need one pass through the array: at each element, check if it updates your current maximum or minimum.",
+      "Initialise both max_val and min_val to inventory[0], then loop from index 1 onward updating them."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_2",
+    "title": "Delivery Route Segment Counter",
+    "difficulty": "medium",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA logistics company tracks fuel consumption per road segment as an array of integers (can be negative if a segment is downhill and recovers fuel). A **delivery route** is a contiguous subarray. The company wants to know how many distinct delivery routes have a total fuel cost **exactly equal to** a given target `k`.\n\nGiven an integer array `fuel` and an integer `k`, return the **count of contiguous subarrays** whose sum equals `k`.\n\n### Function Signature\n```python\ndef count_routes(fuel: list[int], k: int) -> int:\n```\n\n### Input\n- First line: space-separated integers representing `fuel`.\n- Second line: integer `k`.\n\n### Output\n- A single integer: the number of subarrays with sum equal to `k`.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "value_min": -1000,
+      "value_max": 1000,
+      "k_min": -1000000,
+      "k_max": 1000000,
+      "time_limit": "O(n)",
+      "space_limit": "O(n)"
+    },
+    "examples": [
+      {
+        "input": "fuel = [1, 2, 3], k = 3",
+        "output": "2",
+        "explanation": "The subarrays [1,2] (sum=3) and [3] (sum=3) both equal k, giving a count of 2."
+      },
+      {
+        "input": "fuel = [1, -1, 1], k = 1",
+        "output": "3",
+        "explanation": "Valid subarrays are [1] at index 0 (sum=1), [1,-1,1] (sum=1), and [1] at index 2 (sum=1), totalling 3."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check every pair (i, j) and compute the subarray sum using a nested loop. This is O(n²) and will time out for n=100000, but is useful to verify correctness on small inputs.",
+        "code": "def count_routes_brute(fuel, k):\n    n = len(fuel)\n    count = 0\n    for i in range(n):\n        total = 0\n        for j in range(i, n):\n            total += fuel[j]\n            if total == k:\n                count += 1\n    return count",
+        "time": "O(n^2)",
+        "space": "O(1)"
+      },
+      "optimal": {
+        "approach": "Use prefix sum + hashmap. At each index, the running sum is `curr`. If `curr - k` was seen before (stored in freq map), those prior prefixes form subarrays ending here with sum k. Pre-seed freq={0:1} to handle subarrays starting at index 0.",
+        "code": "def count_routes(fuel, k):\n    freq = {0: 1}   # empty prefix has sum 0\n    curr = 0\n    count = 0\n\n    for val in fuel:\n        curr += val\n        # subarrays ending here with sum k exist if (curr - k) was seen before\n        count += freq.get(curr - k, 0)\n        freq[curr] = freq.get(curr, 0) + 1\n\n    return count",
+        "time": "O(n)",
+        "space": "O(n)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "fuel = [1, 2, 3], k = 3",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "fuel = [1, -1, 1], k = 1",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "fuel = [5], k = 5",
+        "expected": "1",
+        "is_visible": false
+      },
+      {
+        "input": "fuel = [1, 1, 1, 1], k = 2",
+        "expected": "3",
+        "is_visible": false
+      },
+      {
+        "input": "fuel = [-1, -1, 1, 1, 1], k = 0",
+        "expected": "3",
+        "is_visible": false
+      },
+      {
+        "input": "fuel = [3, -3, 3, -3, 3], k = 3",
+        "expected": "5",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon",
+      "TCS"
+    ],
+    "round_type": "phone_screen",
+    "hints": [
+      "A sliding window won't work here because the array contains negative numbers — shrinking the window can actually increase the sum.",
+      "Think about prefix sums: if prefix[j] - prefix[i] = k, then the subarray from i+1 to j has sum k. How can you count pairs efficiently?",
+      "Use a hashmap to store frequencies of prefix sums seen so far. For each new prefix sum `curr`, add freq[curr - k] to the answer, then record curr in the map."
+    ]
+  },
+  {
+    "id": "cp_ds_arrays_3",
+    "title": "Signal Broadcast Window",
+    "difficulty": "hard",
+    "topic_id": "ds_arrays",
+    "language": "python",
+    "problem_statement": "## Problem\n\nA radio tower broadcasts signals over a string `signal` of lowercase letters. An engineer wants to find the length of the **longest contiguous broadcast segment** that contains **at most `k` distinct frequency channels** (distinct characters).\n\nGiven a string `signal` and an integer `k`, return the length of the longest substring with at most `k` distinct characters. If `k` is 0 or the string is empty, return 0.\n\n### Function Signature\n```python\ndef longest_broadcast(signal: str, k: int) -> int:\n```\n\n### Input\n- First line: string `signal` of lowercase English letters.\n- Second line: integer `k`.\n\n### Output\n- A single integer: the length of the longest valid substring.",
+    "constraints": {
+      "n_min": 1,
+      "n_max": 100000,
+      "k_min": 0,
+      "k_max": 26,
+      "characters": "lowercase English letters a-z",
+      "time_limit": "O(n)",
+      "space_limit": "O(k)"
+    },
+    "examples": [
+      {
+        "input": "signal = \"eceba\", k = 2",
+        "output": "3",
+        "explanation": "The substring \"ece\" has 2 distinct characters and length 3, which is the longest valid window."
+      },
+      {
+        "input": "signal = \"aabbcc\", k = 1",
+        "output": "2",
+        "explanation": "The longest windows with exactly 1 distinct character are \"aa\" and \"bb\" and \"cc\", each of length 2."
+      }
+    ],
+    "solution": {
+      "brute_force": {
+        "approach": "Check all O(n²) substrings and for each compute the number of distinct characters using a set. Return the length of the longest one with at most k distinct characters. This is O(n²) and too slow for n=100000.",
+        "code": "def longest_broadcast_brute(signal, k):\n    if k == 0:\n        return 0\n    n = len(signal)\n    best = 0\n    for i in range(n):\n        seen = set()\n        for j in range(i, n):\n            seen.add(signal[j])\n            if len(seen) <= k:\n                best = max(best, j - i + 1)\n            else:\n                break\n    return best",
+        "time": "O(n^2)",
+        "space": "O(k)"
+      },
+      "optimal": {
+        "approach": "Variable sliding window with a frequency hashmap. Expand right pointer and add the character to the map. When the number of distinct characters exceeds k, shrink from the left until the window is valid again. Track the maximum window size throughout.",
+        "code": "def longest_broadcast(signal, k):\n    if k == 0:\n        return 0\n\n    freq = {}   # character -> count within current window\n    left = 0\n    best = 0\n\n    for right in range(len(signal)):\n        ch = signal[right]\n        freq[ch] = freq.get(ch, 0) + 1  # expand window\n\n        # shrink from left until at most k distinct chars\n        while len(freq) > k:\n            left_ch = signal[left]\n            freq[left_ch] -= 1\n            if freq[left_ch] == 0:\n                del freq[left_ch]   # remove character from window entirely\n            left += 1\n\n        best = max(best, right - left + 1)\n\n    return best",
+        "time": "O(n)",
+        "space": "O(k)"
+      }
+    },
+    "test_cases": [
+      {
+        "input": "signal = \"eceba\", k = 2",
+        "expected": "3",
+        "is_visible": true
+      },
+      {
+        "input": "signal = \"aabbcc\", k = 1",
+        "expected": "2",
+        "is_visible": true
+      },
+      {
+        "input": "signal = \"abcde\", k = 0",
+        "expected": "0",
+        "is_visible": false
+      },
+      {
+        "input": "signal = \"aaaa\", k = 3",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "signal = \"abaccc\", k = 2",
+        "expected": "4",
+        "is_visible": false
+      },
+      {
+        "input": "signal = \"a\", k = 1",
+        "expected": "1",
+        "is_visible": false
+      }
+    ],
+    "company_tags": [
+      "Amazon"
+    ],
+    "round_type": "on_site",
+    "hints": [
+      "A brute-force checks all O(n²) substrings — think about whether you can maintain a window that you only ever grow or shrink from one end at a time.",
+      "Use a sliding window: expand the right pointer to include new characters, and shrink the left pointer whenever the number of distinct characters exceeds k.",
+      "Keep a frequency dictionary of characters in the current window. The number of keys in that dictionary tells you how many distinct characters are present. When it exceeds k, remove characters from the left until it is valid again."
+    ]
+  }
+]
