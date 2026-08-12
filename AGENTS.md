@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -18,11 +18,11 @@ Claude Code CLI → FastAPI (/v1/messages) → ModelRouter → Provider Transpor
 **Key layers:**
 - **`server.py`** — ASGI entry point; builds the app from `api.app.create_asgi_app()`
 - **`api/`** — FastAPI routes (`/v1/messages`, `/v1/messages/count_tokens`, `/v1/models`), model routing, request detection/optimizations, admin UI
-- **`config/`** — `settings.py` (Pydantic Settings with all env vars), `provider_catalog.py` (provider metadata + capabilities), `provider_ids.py`
+- **`config/`** — `settings.py` (Pydantic Settings with all env vars), `provider_catalog.py` (provider metadata + capabilities), `provider_ids.py`, `constants.py` (shared defaults), `paths.py` (runtime paths), `logging_config.py`, `nim.py` (NIM-specific settings)
 - **`core/anthropic/`** — Shared protocol helpers: SSE building, Anthropic↔OpenAI conversion, thinking block parsing, tool parsing, token counting
-- **`providers/`** — Transport layer. Two base classes: `AnthropicMessagesTransport` (deepseek, wafer, kimi, fireworks, llama.cpp, ollama) and `OpenAIChatTransport` (nvidia_nim, open_router, mistral, gemini, groq, cerebras, lmstudio). Register new providers in `registry.py`.
+- **`providers/`** — Transport layer. Two base classes: `AnthropicMessagesTransport` (open_router, deepseek, wafer, kimi, fireworks, zai, lmstudio, llamacpp, ollama) and `OpenAIChatTransport` (nvidia_nim, gemini, mistral, mistral_codestral, opencode, opencode_go, cerebras, groq). Register new providers in `registry.py`.
 - **`cli/`** — Package entry points (`fcc-server`, `fcc-claude`, `fcc-init`) and Claude CLI process management
-- **`messaging/`** — Discord/Telegram bot adapters with session trees, transcript processing, voice transcription
+- **`messaging/`** — Discord/Telegram bot adapters with `platforms/` (base + Discord + Telegram), `trees/` (message session tree data structures + queue), `rendering/` (platform-specific markdown), `voice.py`, `transcript.py`, `transcription.py` (local Whisper + NVIDIA NIM voice)
 
 **Config file cascade (later overrides earlier):**
 1. `.env` (repo root)
@@ -37,22 +37,30 @@ for v in ("ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"):
 
 **`advaita_agents/`** — Standalone CrewAI content agent project. Not packaged in the wheel. Uses `[dependency-groups] content` (`crewai`, `crewai-tools`). Has its own `.env`. Install with `uv sync --group content`.
 
+**Notable subsystems:**
+- **Admin UI** at `/admin` — localhost-only web UI for editing proxy settings, validating changes, and checking provider liveness. Routes in `api/admin_routes.py`, templates in `api/admin_urls.py`.
+- **Web server tools** in `api/web_tools/` — proxies `web_search` / `web_fetch` tool calls (from Claude Code's server-side tools) through provider backends with egress policy enforcement (`egress.py`), streaming (`streaming.py`), and request parsing (`parsers.py`).
+- **Voice transcription** — `messaging/transcription.py` (local Whisper via Hugging Face transformers + NVIDIA NIM via Riva client in `providers/nvidia_nim/voice.py`). Opt-in extras: `voice` (Riva client), `voice_local` (torch, transformers, librosa).
+- **Messaging session trees** in `messaging/trees/` — `MessageTree`/`MessageNode` with snapshot-capable `_SnapshotQueue`. Each Discord/Telegram reply is one node; branching forms a conversation tree. `queue_manager.py` handles cross-session message serialization.
+- **`api/runtime.py`** — `AppRuntime` owns the `ProviderRegistry`, `CLISessionManager`, and model-list refresh lifecycle at startup/shutdown.
+
 ### File structure
 
 ```
 advaita_agents/
-  main.py                  # CLI entry point (4 commands: roadmap, produce, interactive, gap)
-  crew.py                  # Crew assembly (TopicStrategyCrew, ContentGenerationCrew, ReviewerOnlyCrew, ContentProductionCrew [legacy])
-  taxonomy.py              # 44-topic master taxonomy + scoring constants + utilities
-  interactive.py           # 4-step interactive topic selection wizard
-  run_phase2.py            # Standalone Phase 2 runner (Reviewer only, against existing content)
-  test_reviewer.py         # Isolated Reviewer test (~$0.10 vs $1.00 full pipeline)
+  main.py                     # CLI entry point (4 commands: roadmap, produce, interactive, gap)
+  crew.py                     # Crew assembly (TopicStrategyCrew, ContentGenerationCrew, ReviewerOnlyCrew, ContentProductionCrew [legacy])
+  taxonomy.py                 # 44-topic master taxonomy + scoring constants + utilities
+  interactive.py              # 4-step interactive topic selection wizard
+  pre_publish_scanner.py      # Automated quality checks (<1 sec, $0) — replaces AI Reviewer for ~80% of runs
+  run_phase2.py               # Optional standalone Reviewer re-run against existing content
+  test_reviewer.py            # Isolated Reviewer test (~$0.10 vs $1.00 full pipeline)
   agents/
-    content_agents.py      # 5 production agents (Research→Writer→Quiz→Coding→Reviewer)
-    topic_strategist.py    # 1 strategy agent (roadmap planning, demand signals)
+    content_agents.py         # 5 production agents (Research→Writer→Quiz→Coding→Reviewer)
+    topic_strategist.py       # 1 strategy agent (roadmap planning, demand signals)
   tasks/
-    content_tasks.py       # 5 production tasks with quality guardrails
-    topic_curation.py      # 3 strategy tasks (demand collection, prioritization, gap analysis)
+    content_tasks.py          # 5 production tasks with quality guardrails
+    topic_curation.py         # 3 strategy tasks (demand collection, prioritization, gap analysis)
 ```
 
 ### Data flow
@@ -61,9 +69,11 @@ advaita_agents/
 main.py commands
   ├─ roadmap  → TopicStrategyCrew → roadmap.json (AI-generated, via DeepSeek agent)
   │                                   roadmap_scored.json (lightweight fallback)
-  ├─ produce  → ContentGenerationCrew (4 agents) → auto-fix → ⏸ Checkpoint #1 (human edits)
-  │            → ReviewerOnlyCrew (1 agent) → ⏸ Checkpoint #2 (human sign-off)
-  │            → content_output/<topic_id>/{5 task outputs + combined JSON}
+  ├─ produce  → ContentGenerationCrew (4 agents) → auto-fix → pre-publish scanner
+  │            → ⏸ Unified Checkpoint (publish / fix / review / discard)
+  │              ├─ publish  → Skip AI Reviewer, publish at 0.85 ($0.10 saved)
+  │              └─ review   → ReviewerOnlyCrew (1 agent) → human sign-off → publish
+  │            → content_output/<topic_id>/{6 task outputs + combined JSON}
   │            → published_index.json (updated with coverage %)
   ├─ gap      → local-only computation (NO API calls) → gap_report.json
   └─ interactive → taxonomy browser → delegates to _produce_topic()
@@ -98,9 +108,26 @@ Each of the 44 leaf topics has: `id`, `label`, `weight` (1-10), `difficulties`, 
 
 Tier cutoffs: ≥7.0 = TIER 1, ≥4.5 = TIER 2, <4.5 = TIER 3.
 
-### Content production pipeline (split with human checkpoints)
+### Content production pipeline (scanner-first, single checkpoint)
 
-The pipeline runs in two phases separated by human checkpoints:
+The pipeline runs Phase 1 (4 agents), then a pre-publish scanner, then a single unified human checkpoint. The AI Reviewer is optional — invoked only when the human chooses `review` at the checkpoint.
+
+```
+Phase 1: Generation Crew (4 agents, ~$0.95)
+  Research → Writer → Quiz → Coding
+    ↓
+Auto-fix (sandbox solution validation)
+    ↓
+Pre-Publish Scanner (<1 sec, $0)
+    ↓
+Unified Human Checkpoint
+  ├─ publish  → Skip AI Reviewer, publish at 0.85 ($0.10 saved)
+  ├─ fix      → Edit content files, re-run pipeline
+  ├─ review   → Run AI Reviewer (~$0.10) for deeper quality check
+  └─ discard  → No coverage update
+    ↓
+published_index.json updated
+```
 
 **Phase 1 — Content Generation** (4 agents, ~$0.95, via `create_content_generation_crew()`):
 1. **Research** (DeepSeek, max_iter=12) → web searches + scrapes → structured research notes
@@ -110,16 +137,38 @@ The pipeline runs in two phases separated by human checkpoints:
 
 Then auto-fix runs (`_validate_coding_solutions(fix=True)`) — sandbox execution corrects wrong expected test values.
 
-**⏸ Human Checkpoint #1** (`_human_checkpoint_pre_review`): Human opens 3 content files, fixes surface errors (duplicate drafts, self-correction artifacts, contradictory distractor arithmetic, typos), types 'ok' or 'regenerate'. Catches in seconds what costs the LLM Reviewer its whole token budget to flag.
+**Pre-Publish Scanner** (`pre_publish_scanner.py`, <1 sec, $0): Automated quality checks that replace the AI Reviewer for ~80% of pipeline runs. Catches everything computationally verifiable:
 
-**Phase 2 — Reviewer** (1 agent, ~$0.10, via `create_reviewer_crew()`):
-5. **Technical Reviewer** (Claude) — receives content embedded directly in task description (no CrewAI context chaining). Quality gate: verdict (approved/rejected) + numbered fix list.
+| Check | How | Catches |
+|---|---|---|
+| Test case expected values | Sandbox execute solution code | Wrong expected outputs (Reviewer's #1 catch) |
+| MCQ answer in options | `correct_index` in range, answer value text-match vs explanation | Answer computed as 19 but option says 18 |
+| Duplicate content | Hash examples, flag identical pairs | Draft artifacts with inline self-corrections |
+| Self-monologue artifacts | Regex for "wait,", "actually let me", "Thought:", "hmm" | Writer artifacts that waste Reviewer tokens |
+| JSON validity | `json.loads()` + truncation detection | Format compliance failures |
+| Distractor distinctness | SequenceMatcher ratio between option texts | Near-identical distractors (code-MCQ threshold: 95%, plain-text: 85%) |
+| Article structure | Heading count, code block count, min length | Unstructured or truncated articles |
+| Sandbox limitations | Distinct WARN for TreeNode/ListNode errors | Prevents false FAILs on tree/graph problems |
 
-**⏸ Human Checkpoint #2** (`_human_checkpoint_post_review`): Human reads verdict + fixes, types 'publish' or 'reject'. Prevents low-quality content from auto-accumulating in `published_index.json`.
+Returns `ScanReport` with PASS/FAIL and per-check `Finding` objects. FAIL = issues that need fixing or an optional AI Reviewer pass. PASS = content publication-ready at 0.85 (standard). Usage:
+```python
+from advaita_agents.pre_publish_scanner import scan_topic
+report = scan_topic("ds_arrays", article_raw=..., quiz_raw=..., coding_raw=...)
+if report.verdict == "PASS":
+    print("Ready to publish at 0.85")
+```
 
-Coverage mapping: `verdict=rejected → 0.25`, `approved_with_minor_fixes → 0.85`, `approved → 1.0`.
+**Unified Human Checkpoint** (`_human_unified_checkpoint`): Single checkpoint replacing the old two-gate flow (CP#1: human edits + CP#2: Reviewer sign-off). Shows scanner results and offers 4 options:
+- `publish` — Standard 0.85 coverage, skip AI Reviewer (~80% of runs, saves $0.10 and 1-2 min)
+- `fix` — Edit content files and re-run the pipeline
+- `review` — Run AI Reviewer for deeper quality check (~20% of runs)
+- `discard` — No coverage update
 
-The old monolithic `create_content_production_crew()` (5 agents in one kickoff) is still available for backward compatibility but the split pipeline is the default.
+**AI Reviewer** (Claude, ~$0.10, via `create_reviewer_crew()`): Optional Phase 2, invoked only via `review` at the checkpoint. Runs the Technical Reviewer with content embedded directly in task description (no CrewAI context chaining). Verdict: approved (1.0), approved_with_minor_fixes (0.85), rejected (0.25).
+
+Coverage mapping: scanner-PASS → 0.85 (standard). AI Reviewer: `rejected → 0.25`, `approved_with_minor_fixes → 0.85`, `approved → 1.0`.
+
+The old two-checkpoint pipeline and monolithic `create_content_production_crew()` (5 agents in one kickoff) are still available for backward compatibility.
 
 ### Quality guardrail system
 
@@ -159,20 +208,19 @@ The key insight: the impulse to "be thorough" + examples → the model traces ev
 
 ### Post-production JSON validation
 
-After CrewAI kickoff, `_validate_task_outputs()` in `main.py` runs structural checks on quiz, coding, and review outputs BEFORE the Reviewer's verdict summary is printed:
+`_validate_task_outputs()` in `main.py` runs structural checks on quiz, coding, and review outputs after Phase 1 completes. The pre-publish scanner (`pre_publish_scanner.py`) provides deeper automated validation (<1 sec, $0) that supersedes the Reviewer for ~80% of runs. Both run before the unified checkpoint:
 
-- **Quiz**: Validates JSON parses, correct item count, `correct_index` in-range, detects "Thought:" preambles
-- **Coding**: Detects "Thought:" preambles (format compliance failure), validates JSON parses, correct item count
-- **Reviewer**: Detects "Thought:" preambles, validates JSON parses, checks for `verdict` field
-- **Truncation detection**: Reports parse errors with position context so token limits can be diagnosed immediately
+- **`_validate_task_outputs()`** — Fast structural checks: JSON parse validity, item count, `correct_index` in-range, "Thought:" preamble detection, truncation detection
+- **Pre-Publish Scanner** — Richer validation: sandbox test case execution, MCQ answer-text matching, duplicate detection, distractor distinctness, self-monologue scanning, article structure heuristics. Returns `ScanReport` with PASS/FAIL.
+
 - `_strip_code_fences()` handles agents that wrap their JSON in ` ```json ... ``` ` fences
 - `_strip_double_braces()` normalizes `{{...}}` → `{...}` (Reviewer sometimes copies the expected_output template pattern literally)
 
-Validation errors are printed but don't block the combined save — they surface structural failures instantly instead of burying them in the review JSON.
+Validation errors are printed but don't block the combined save — they surface structural failures instantly at the checkpoint.
 
 **`_save_task_output()` wrapping:** When a raw task output fails `json.loads()`, it's wrapped as `{"raw_output": "<original text>"}`. This means individual task JSON files (e.g. `review_report_*.json`) have a different shape than the combined JSON (where all values are raw strings). Always parse individual task outputs defensively: try `json.loads()` first, then access `data.get("raw_output", data)` if it doesn't match expectations.
 
-**Code fence parsing in verdict/coverage paths:** The Reviewer wraps its output in ` ```json ... ``` ` fences. The single verdict-reading code path (in `_produce_topic()`) must chain `_strip_code_fences()` then `_strip_double_braces()` before `json.loads()`. The `_validate_task_outputs()` path also chains them correctly. Run 19 revealed a missing `_strip_code_fences()` call, causing silent JSON parse failures that masked the Reviewer's `rejected` verdict (fell to `except → coverage_increment = 0.25`, but `max(old_0.85, 0.25) = 0.85` hid it). Both paths now chain both functions correctly.
+**Code fence parsing in verdict/coverage paths:** When the AI Reviewer runs (via `review` at the checkpoint), its output is wrapped in ` ```json ... ``` ` fences. The verdict-reading code path in the `ai_review` branch of `_produce_topic()` chains `_strip_code_fences()` → `_strip_double_braces()` before `json.loads()`. The `_validate_task_outputs()` path also chains them correctly. Run 19 revealed a missing `_strip_code_fences()` call, causing silent JSON parse failures that masked the Reviewer's `rejected` verdict (fell to `except → coverage_increment = 0.25`, but `max(old_0.85, 0.25) = 0.85` hid it). Both paths now chain both functions correctly.
 
 ### Fix-cycle: automated solution validation + auto-correction
 
@@ -187,6 +235,8 @@ Validation errors are printed but don't block the combined save — they surface
 **Auto-fix mode (`fix=True`, enabled by default in the pipeline):** When a mismatch is found, the function corrects the `expected`/`output` value in the parsed problem dict to match what the solution code ACTUALLY produces (using `json.dumps(actual)`). The corrected JSON string is returned as the second tuple element, and the pipeline re-saves the individual coding file AND uses the corrected version in the combined output that the Reviewer sees.
 
 This eliminates the #1 pipeline rejection cause: the Coding agent cannot execute code — it can only simulate execution — so it invents wrong expected outputs that its own solution doesn't produce. No amount of prompt engineering can fix this; only actual Python execution can.
+
+The pre-publish scanner (`pre_publish_scanner.py`) has its own independent sandbox execution (`_check_coding_test_cases()`). It additionally distinguishes between real mismatches (FAIL — solution produces a different result than expected) and sandbox limitations (WARN — TreeNode/ListNode code can't execute in the sandbox). This prevents false FAIL verdicts on tree/graph/linked-list topics.
 
 **Key detail — `"output"` vs `"expected"` key handling:** The Coding agent uses `"output"` for examples but `"expected"` for test_cases. The validator uses `case.get("expected") or case.get("output", "")` as a defensive fallback. Auto-fix preserves whichever key was found — if the case dict has `"expected"`, it updates that; otherwise it updates `"output"`.
 
@@ -246,8 +296,10 @@ uv run python advaita_agents/main.py produce --topic-id ds_arrays  # produce one
 uv run python advaita_agents/main.py produce               # produce all TIER 1 topics
 uv run python advaita_agents/main.py interactive           # interactive wizard
 uv run python advaita_agents/main.py gap                   # gap analysis (local, instant)
+uv run python advaita_agents/main.py produce --topic-id ds_arrays --skip-checkpoints  # auto-publish (no human gate)
+uv run python advaita_agents/pre_publish_scanner.py ds_arrays  # run scanner against existing content
 uv run python advaita_agents/test_reviewer.py              # isolated Reviewer test (~$0.10, no full pipeline)
-uv run python advaita_agents/run_phase2.py [timestamp]      # re-run Reviewer against existing Phase 1 content
+uv run python advaita_agents/run_phase2.py [timestamp]     # optional Reviewer re-run against existing content
 ```
 
 ## CODING ENVIRONMENT
